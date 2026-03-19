@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow</title>
+</head>
+<body>
+
+    <header>
+        <h1>TaskFlow</h1>
+    </header>
+
+    <div class="container"> <aside>
+            <h2>Estadísticas</h2>
+            <p>Total: <span id="total-tasks">0</span></p>
+            <p>Completadas: <span id="completed-tasks">0</span></p>
+            <p>Pendientes: <span id="pending-tasks">0</span></p>
+            
+            <nav>
+                <h2>Filtros</h2>
+                </nav>
+        </aside>
+
+        <main>
+            <section id="add-task">
+                <h2>Nueva Tarea</h2>
+                <form id="todo-form">
+                    <label for="task-input">¿Qué tienes pendiente?</label>
+                    <input type="text" id="task-input" placeholder="Ej. Comprar pan" required>
+                    <button type="submit">Añadir</button>
+                </form>
+            </section>
+
+            <section id="task-list-section">
+                <h2>Mis Tareas</h2>
+                <ul id="task-list">
+                    </ul>
+            </section>
+        </main>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 TaskFlow Project</p>
+    </footer>
+
+</body>
+</html>
