@@ -1,0 +1,159 @@
+:root {
+  /* Colores */
+  --primary-color: #2563eb;    /* Un azul moderno */
+  --bg-color: #f3f4f6;         /* Gris muy clarito para el fondo */
+  --text-color: #1f2937;       /* Gris casi negro para que no canse la vista */
+  --white: #ffffff;
+  --danger: #ef4444;           /* Rojo para el botón borrar */
+
+  /* Espaciado y bordes */
+  --radius: 8px;
+  --spacing: 1rem;             /* 16px aprox */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* Esto hace que el padding no infle el tamaño de las cajas */
+}
+
+body {
+  display: flex;
+  flex-direction: column; /* Ponemos las piezas (header, main, footer) una sobre otra */
+  min-height: 100vh;      /* Ocupa el 100% de la altura de la pantalla */
+  margin: 0;
+}
+
+header {
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.main-container {
+  display: flex;
+  max-width: 1200px;
+  margin: 2rem auto; /* Centra todo el bloque en la pantalla */
+  gap: 2rem;         /* Espacio de separación entre Aside y Main */
+  padding: 0 1rem;
+  flex: 1;
+}
+
+aside {
+  flex: 0 0 250px; 
+  background: var(--white);
+  padding: var(--spacing);
+  border-radius: var(--radius);
+  height: fit-content; /* Se ajusta a lo que midan los textos de dentro */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+footer {
+  background-color: #374151; 
+  color: white;
+  text-align: center;        
+  padding: 1rem 0;          
+  width: 100%;               
+}
+
+.task-item {
+  background: var(--white);
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  display: flex;
+  justify-content: space-between; /* Texto a la izquierda, botón a la derecha */
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+/* Inputs y botones */
+input[type="text"] {
+  padding: 0.6rem;
+  font-size: 16px; /* Evita que el iPhone haga zoom automático */
+  border: 2px solid #ddd;
+  border-radius: var(--radius);
+  width: 100%;
+}
+
+/* Estado Focus: Cuando el usuario hace clic para escribir */
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Botones y Hover: Al pasar el ratón por encima */
+button {
+  cursor: pointer;
+  transition: background 0.3s ease; 
+}
+
+button:hover {
+  filter: brightness(90%); 
+}
+
+#todo-form {
+  background: var(--white);           
+  padding: 1.5rem;                    
+  border-radius: var(--radius);       
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+  
+  display: flex;                      
+  flex-direction: column;             
+  gap: 0.8rem;                        
+  margin-bottom: 2rem;                
+}
+
+#todo-form label {
+  font-weight: bold;                  
+  color: var(--primary-color);        
+}
+
+#todo-form button {
+  background-color: var(--primary-color); 
+  color: white;                           
+  border: none;                          
+  padding: 0.8rem;                        
+  border-radius: var(--radius);           
+  font-weight: bold;                      
+}
+
+/* Media Query: Se activa cuando la pantalla mide 768px o menos */
+@media (max-width: 768px) {
+  
+  .main-container {
+    flex-direction: column; 
+    margin: 1rem auto;      
+    gap: 1.5rem;            
+  }
+
+  aside {
+    flex: none;            
+    width: 100%;            
+    order: 2;               /* Mueve las estadísticas debajo del contenido principal */
+  }
+
+  main {
+    order: 1;               /* Asegura que el formulario y la lista salgan primero */
+  }
+
+  header h1 {
+    font-size: 1.5rem;     
+  }
+
+  #todo-form {
+    padding: 1rem;          
+  }
+
+  .task-item {
+    flex-direction: column; 
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .delete-btn {
+    align-self: flex-end;  
+  }
+}

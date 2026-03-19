@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>TaskFlow</title>
 </head>
 <body>
-
     <header>
         <h1>TaskFlow</h1>
     </header>
 
-    <div class="container"> <aside>
+    <div class="main-container"> 
+        
+        <aside>
             <h2>Estadísticas</h2>
             <p>Total: <span id="total-tasks">0</span></p>
             <p>Completadas: <span id="completed-tasks">0</span></p>
@@ -19,7 +21,7 @@
             
             <nav>
                 <h2>Filtros</h2>
-                </nav>
+            </nav>
         </aside>
 
         <main>
@@ -34,16 +36,23 @@
 
             <section id="task-list-section">
                 <h2>Mis Tareas</h2>
-                <ul id="task-list">
-                    </ul>
+                <ul id="task-list"></ul>
+                
+                <template id="task-template">
+                    <li class="task-item">
+                        <div class="flex items-center">
+                            <input type="checkbox" class="task-checkbox mr-2">
+                            <span class="task-text"></span> 
+                        </div>
+                        <button type="button" class="delete-btn text-red-500">Eliminar</button>
+                    </li>
+                </template>
             </section>
         </main>
 
-    </div>
-
+    </div> 
     <footer>
-        <p>&copy; 2026 TaskFlow Project</p>
+        <p>TaskFlow Project</p>
     </footer>
-
 </body>
 </html>
