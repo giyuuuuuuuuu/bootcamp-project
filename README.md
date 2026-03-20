@@ -11,3 +11,6 @@ El diseño de **TaskFlow** ha sido pensado para ser funcional en diversos dispos
 - **Móvil:** Se prioriza la "zona del pulgar", situando las acciones de búsqueda y creación en la parte inferior. Los filtros se manejan mediante una vista secundaria para optimizar el espacio en pantalla.
 
 Puedes encontrar los esquemas detallados en la carpeta `docs/design`.
+
+**ENTREGA PARCIAL VERCEL**
+bootcamp-project-lemon.vercel.app
