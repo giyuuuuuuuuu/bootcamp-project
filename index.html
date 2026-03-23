@@ -1,59 +1,99 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
     <title>TaskFlow</title>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>TaskFlow</h1>
+      <h1>TaskFlow</h1>
     </header>
 
-    <div class="main-container"> 
-        
-        <aside>
-            <h2>Estadísticas</h2>
-            <p>Total: <span id="total-tasks">0</span></p>
-            <p>Completadas: <span id="completed-tasks">0</span></p>
-            <p>Pendientes: <span id="pending-tasks">0</span></p>
-        </aside>
-
-        <main>
-            <section id="add-task">
-                <h2>Nueva Tarea</h2>
-                <form id="todo-form">
-                    <label for="task-input">¿Qué tienes pendiente?</label>
-                    <input type="text" id="task-input" placeholder="Escriba una tarea" novalidate>
-                    <button type="submit">Añadir</button>
-                </form>
-            </section>
-            <section id="task-list-section">
-                <h2>Mis Tareas</h2>
-                <div class="filters">
-                    <button class="filter-btn active" data-filter="all">Todas</button>
-                    <button class="filter-btn" data-filter="completed">Completadas</button>
-                    <button class="filter-btn" data-filter="pending">Pendientes</button>
-                </div>
-                <ul id="task-list"></ul>
-                
-                <template id="task-template">
-                    <li class="task-item">
-                        <div class="flex items-center">
-                            <input type="checkbox" class="task-checkbox mr-2">
-                            <span class="task-text"></span> 
-                        </div>
-                        <button type="button" class="delete-btn text-red-500">Eliminar</button>
-                    </li>
-                </template>
-            </section>
-        </main>
-
-    </div> 
+    <div class="main-container">
+      <aside>
+        <h2>Panel de Control</h2>
+        <div class="stats-section">
+          <h3>Estadísticas</h3>
+          <p>Total: <span id="total-tasks">0</span></p>
+          <p>Completadas: <span id="completed-tasks">0</span></p>
+          <p>Pendientes: <span id="pending-tasks">0</span></p>
+        </div>
+        <div class="search-section">
+          <h3>Filtrar por texto</h3>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Ej: Comprar pan..."
+          />
+        </div>
+      </aside>
+      <main>
+        <section id="add-task">
+          <h2>Nueva Tarea</h2>
+          <form id="todo-form">
+            <label for="task-input">¿Qué tienes pendiente?</label>
+            <input
+              type="text"
+              id="task-input"
+              placeholder="Escriba una tarea"
+              novalidate
+            />
+            <button type="submit">Añadir</button>
+          </form>
+        </section>
+        <section id="task-list-section">
+          <h2>Mis Tareas</h2>
+          <div class="global-actions">
+            <button id="complete-all-btn" class="btn-action">
+              Marcar todas
+            </button>
+            <button id="clear-completed-btn" class="btn-danger-alt">
+              Borrar completadas
+            </button>
+          </div>
+          <div class="filters">
+            <button class="filter-btn active" data-filter="all">Todas</button>
+            <button class="filter-btn" data-filter="completed">
+              Completadas
+            </button>
+            <button class="filter-btn" data-filter="pending">Pendientes</button>
+          </div>
+          <ul id="task-list"></ul>
+          <template id="task-template">
+            <li class="task-item">
+              <div class="flex items-center">
+                <input type="checkbox" class="task-checkbox mr-2" />
+                <span class="task-text"></span>
+              </div>
+              <div>
+                <button class="edit-btn">Editar</button
+                ><button class="delete-btn">Eliminar</button>
+              </div>
+            </li>
+          </template>
+        </section>
+      </main>
+    </div>
     <footer>
-        <p>TaskFlow Project</p>
+      <p>TaskFlow Project</p>
     </footer>
+    <dialog id="edit-modal">
+      <form method="dialog">
+        <h3>Editar Tarea</h3>
+        <input type="text" id="edit-input" placeholder="Nuevo nombre..." />
+
+        <div class="modal-buttons">
+          <button type="button" id="cancel-edit" class="btn-secondary">
+            Cancelar
+          </button>
+          <button type="submit" id="save-edit" class="btn-primary">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </dialog>
     <script src="app.js"></script>
-</body>
+  </body>
 </html>
