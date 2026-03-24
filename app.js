@@ -11,24 +11,34 @@ const saveEditBtn = document.getElementById("save-edit");
 const cancelEditBtn = document.getElementById("cancel-edit");
 const completeAllBtn = document.getElementById("complete-all-btn");
 const clearCompleteBtn = document.getElementById("clear-completed-btn");
+const themeToggleBtn = document.getElementById("theme-toggle");
+const themeIcon = document.getElementById("theme-icon");
 
 let taskToEdit = null;
 let currentFilter = "all";
 let searchQuery = "";
 let tasks = savedJson ? JSON.parse(savedJson) : [];
 
-completeAllBtn.addEventListener('click', () =>{
-    tasks.forEach(task =>{
-        task.completed = true;
-    });
-    renderTasks();
-    saveToLocalStorage();
+const savedTheme =
+  localStorage.getItem("theme") ||
+  (window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light");
+
+applyTheme(savedTheme);
+
+completeAllBtn.addEventListener("click", () => {
+  tasks.forEach((task) => {
+    task.completed = true;
+  });
+  renderTasks();
+  saveToLocalStorage();
 });
 
-clearCompleteBtn.addEventListener('click', () =>{
-    tasks = tasks.filter(task => !task.completed);
-    renderTasks();
-    saveToLocalStorage();
+clearCompleteBtn.addEventListener("click", () => {
+  tasks = tasks.filter((task) => !task.completed);
+  renderTasks();
+  saveToLocalStorage();
 });
 
 taskForm.addEventListener("submit", (e) => {
@@ -54,7 +64,7 @@ taskForm.addEventListener("submit", (e) => {
 
 filterButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    filterButtons.forEach(b => b.classList.remove("active"));
+    filterButtons.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     currentFilter = btn.dataset.filter;
     renderTasks();
@@ -108,6 +118,26 @@ function renderTasks() {
 
   updateStats(); // Cada vez que dibujamos, actualizamos los números
 }
+
+function applyTheme(theme) {
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark");
+    themeIcon.textContent = "☀️"; // Sol para volver al claro
+  } else {
+    document.documentElement.classList.remove("dark");
+    themeIcon.textContent = "🌙"; // Luna para volver al oscuro
+  }
+}
+
+themeToggleBtn.addEventListener("click", () => {
+  const currentTheme = document.documentElement.classList.contains("dark")
+    ? "dark"
+    : "light";
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+  applyTheme(newTheme);
+  localStorage.setItem("theme", newTheme); // Guardar preferencia
+});
 
 taskList.addEventListener("click", (e) => {
   const id = e.target.dataset.id;
