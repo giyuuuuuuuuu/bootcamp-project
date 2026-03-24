@@ -101,23 +101,18 @@ function renderTasks() {
   });
 
   filteredTasks.forEach((task) => {
-    // Clonamos el contenido del template
     const clone = taskTemplate.cloneNode(true);
-    clone.querySelector(".task-text").textContent = task.title;
-
-    if (task.completed) {
-      clone.querySelector(".task-text").style.textDecoration = "line-through";
-      clone.querySelector(".task-checkbox").checked = true;
-    }
-
-    clone.querySelector(".delete-btn").dataset.id = task.id;
-    clone.querySelector(".task-checkbox").dataset.id = task.id;
-    clone.querySelector(".edit-btn").dataset.id = task.id;
-    taskList.appendChild(clone);
-  });
-
-  updateStats(); // Cada vez que dibujamos, actualizamos los números
-}
+    const li = clone.firstElementChild;
+    li.querySelector(".task-text").textContent = task.title;
+    li.querySelector(".delete-btn").dataset.id = task.id;
+    li.querySelector(".task-checkbox").dataset.id = task.id;
+    li.querySelector(".edit-btn").dataset.id = task.id;
+    li.querySelector(".task-checkbox").checked = true;
+    
+    taskList.appendChild(li);
+    });
+    updateStats(); // <--- ¡Asegúrate de añadir esta línea que faltaba dentro de renderTasks!
+  };
 
 function applyTheme(theme) {
   if (theme === "dark") {
@@ -153,10 +148,24 @@ taskList.addEventListener("click", (e) => {
   }
 
   if (e.target.classList.contains("delete-btn")) {
-    // Si clickeo en eliminar: filtramos la lista para quitar esa tarea
-    tasks = tasks.filter((task) => task.id !== parseInt(id));
-    renderTasks();
-    saveToLocalStorage(); // Guardamos el cambio
+    // 1. Capturamos el ID de forma segura (por si acaso el clic da en el borde)
+    const idToDelete =
+      e.target.dataset.id || e.target.closest("button").dataset.id;
+    const li = e.target.closest("li");
+
+    // 2. Aplicamos la animación de salida (0.4s para que coincida con el CSS)
+    li.style.transition = "all 0.4s ease";
+    li.classList.add("opacity-0", "scale-95");
+
+    // 3. Esperamos exactamente 400 milisegundos (0.4 segundos)
+    setTimeout(() => {
+      // 4. Lógica de borrado: filtramos usando el idToDelete que guardamos arriba
+      tasks = tasks.filter((task) => task.id !== parseInt(idToDelete));
+
+      // 5. Actualizamos todo
+      saveToLocalStorage();
+      renderTasks();
+    }, 400);
   }
 
   if (e.target.classList.contains("task-checkbox")) {

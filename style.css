@@ -1,6 +1,28 @@
-/* El fondo oscuro con desenfoque */
+#task-list li {
+  /* Mantenemos tu transición suave y profesional */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  overflow: hidden;
+  max-height: 500px;
+  opacity: 1 !important;
+  transform: translateY(0) scale(1);
+}
+
+/* ESTADO INVISIBLE: 
+   Lo usamos para las tareas que se están BORRANDO 
+   y para las que acaban de NACER.
+*/
+#task-list li.opacity-0 {
+  opacity: 0 !important;
+  transform: translateY(20px) scale(0.95) !important;
+  max-height: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  pointer-events: none;
+}
+
 dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
 }
-
