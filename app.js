@@ -88,31 +88,41 @@ searchInput.addEventListener("input", (e) => {
 });
 
 function renderTasks() {
-  taskList.innerHTML = ""; // Limpiamos la lista para no duplicar todo
-  // Recorremos la lista de tareas, y aplicamos el filtro de una vez
-  let filteredTasks = tasks.filter((task) => {
+  taskList.innerHTML = ""; // Limpieza simple y directa
+
+  const filteredTasks = tasks.filter((task) => {
     const matchesFilter =
       currentFilter === "all" ||
       (currentFilter === "pending" && !task.completed) ||
       (currentFilter === "completed" && task.completed);
     const matchesSearch = task.title.toLowerCase().includes(searchQuery);
-    // SOLO si cumple las dos condiciones, la tarea se guarda en filteredTasks
     return matchesFilter && matchesSearch;
   });
 
   filteredTasks.forEach((task) => {
     const clone = taskTemplate.cloneNode(true);
-    const li = clone.firstElementChild;
-    li.querySelector(".task-text").textContent = task.title;
+    const li = clone.querySelector("li");
+    const span = li.querySelector(".task-text");
+    const checkbox = li.querySelector(".task-checkbox");
+
+    span.textContent = task.title;
+
+    // Dataset IDs para saber a qué tarea le damos click luego
+    li.dataset.id = task.id;
     li.querySelector(".delete-btn").dataset.id = task.id;
-    li.querySelector(".task-checkbox").dataset.id = task.id;
     li.querySelector(".edit-btn").dataset.id = task.id;
-    li.querySelector(".task-checkbox").checked = true;
-    
-    taskList.appendChild(li);
-    });
-    updateStats(); // <--- ¡Asegúrate de añadir esta línea que faltaba dentro de renderTasks!
-  };
+    checkbox.dataset.id = task.id;
+
+    if (task.completed) {
+      span.classList.add("line-through", "opacity-50");
+      checkbox.checked = true;
+    }
+
+    taskList.appendChild(clone);
+  });
+
+  updateStats();
+}
 
 function applyTheme(theme) {
   if (theme === "dark") {
