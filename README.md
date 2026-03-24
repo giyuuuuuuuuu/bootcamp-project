@@ -1,8 +1,4 @@
 # Bootcamp Project
-¡Perfecto\! Un buen **README** es el broche de oro para cualquier proyecto. Es la carta de presentación que explica a otros (o a tu "yo" del futuro) cómo funciona, qué tecnologías usa y por qué es especial.
-
-Aquí tienes un `README.md` profesional, estructurado y listo para copiar en tu repositorio.
-
 -----
 
 # 🚀 TaskFlow Pro
