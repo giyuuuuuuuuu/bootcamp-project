@@ -26,10 +26,10 @@ En cuanto a claridad, he de decir que ChatGPT fue más claro al no usar terminol
 Ejemplos:
 
 Claude:
-![esquema-claude]
+![esquema-claude](docs/images/esquema.png)
 
 ChatGPT:
-![chat-ejemplo]
+![chat-ejemplo](docs/images/chat-apis.png)
 
 Viendo esto, me da el pie para pasar al siguiente apartado.
 
@@ -41,14 +41,11 @@ Ejemplos:
 
 ChatGPT:
 
-![chat-ejemplo2]
+![chat-ejemplo2](docs/images/chat-event-loop.png)
 
 Claude:
 
-![claude-code]
-
-
-
+![claude-code](docs/images/codigo-claude.png)
 
 (Y continúa más hacia abajo).
 
