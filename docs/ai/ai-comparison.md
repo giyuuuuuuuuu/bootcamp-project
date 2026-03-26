@@ -26,10 +26,10 @@ En cuanto a claridad, he de decir que ChatGPT fue más claro al no usar terminol
 Ejemplos:
 
 Claude:
-
+![esquema-claude]
 
 ChatGPT:
-
+![chat-ejemplo]
 
 Viendo esto, me da el pie para pasar al siguiente apartado.
 
@@ -41,9 +41,12 @@ Ejemplos:
 
 ChatGPT:
 
-
+![chat-ejemplo2]
 
 Claude:
+
+![claude-code]
+
 
 
 
