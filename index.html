@@ -67,7 +67,10 @@
         >
           <h2 class="text-xl font-bold mb-4 text-blue-600">Nueva Tarea</h2>
           <form id="todo-form" class="flex flex-col gap-4">
-            <label class="font-medium text-gray-600 dark:text-gray-300"
+            <label
+              for="task-input"
+              class="font-medium text-gray-600 dark:text-gray-300"
+            >
               >¿Qué tienes pendiente?</label
             >
             <input
@@ -76,6 +79,22 @@
               placeholder="Escriba una tarea"
               class="p-3 rounded-lg border-2 dark:bg-gray-700 dark:border-gray-600 focus:border-blue-500 outline-none transition-all"
             />
+            <div class="flex flex-col gap-2">
+              <label
+                for="category-select"
+                class="font-medium text-gray-600 dark:text-gray-300"
+                >Categoría</label
+              >
+              <select
+                id="category-select"
+                class="p-3 rounded-lg border-2 dark:bg-gray-700 dark:border-gray-600 focus:border-blue-500 outline-none transition-all"
+              >
+                <option value="personal">Personal</option>
+                <option value="work">Trabajo</option>
+                <option value="study">Estudio</option>
+                <option value="health">Salud</option>
+              </select>
+            </div>
             <button
               type="submit"
               class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg"
@@ -141,9 +160,14 @@
                   type="checkbox"
                   class="task-checkbox w-5 h-5 accent-blue-600"
                 />
-                <span
-                  class="task-text font-medium text-gray-700 dark:text-gray-200"
-                ></span>
+                <div class="flex flex-col gap-1">
+                  <span
+                    class="task-text font-medium text-gray-700 dark:text-gray-200"
+                  ></span>
+                  <span class="task-category-badge task-category-personal"
+                    >Personal</span
+                  >
+                </div>
               </div>
               <div class="flex gap-2">
                 <button
