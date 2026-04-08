@@ -25,40 +25,11 @@ Y estos fueron los resultados:
 
 En cuanto a claridad, he de decir que ChatGPT fue más claro al no usar terminología o esquemas complejos, facilitando así la comprensión para personas un poco menos experimentadas en este mundillo. Por el contrario, Claude si es más técnica, lo cual no es necesariamente malo, pero, si no conoces terminología básica pues se te pueda complicar entender (yo).
 
-<<<<<<< HEAD
-Ejemplos:
-
-Claude:
-![esquema-claude](docs/images/esquema.png)
-
-ChatGPT:
-![chat-ejemplo](docs/images/chat-apis.png)
-
-Viendo esto, me da el pie para pasar al siguiente apartado.
-=======
->>>>>>> 1b312e5 (Terminada la comparación entre IAs)
-
 # Profundidad
 
-Como se puede ver, Claude abarca muchos más terminos, explica de manera mas extendida, lo cual nos permite ver realmente como funciona el código desde dentro, ChatGPT por su parte peca de simpleza, puede que al inicio sea claro y se entienda, pero después se queda bastante corto.
+Claude abarca muchos más terminos, explica de manera mas extendida, lo cual nos permite ver realmente como funciona el código desde dentro, ChatGPT por su parte peca de simpleza, puede que al inicio sea claro y se entienda, pero después se queda bastante corto.
 
-<<<<<<< HEAD
-Ejemplos:
 
-ChatGPT:
-
-![chat-ejemplo2](docs/images/chat-event-loop.png)
-
-Claude:
-
-![claude-code](docs/images/codigo-claude.png)
-
-(Y continúa más hacia abajo).
-
-# Conclusión
-
-Queriendo llegar a una conclusión rápida, si buscas una explicación rápida, recordar algún término en específico, o simplemente copiar por copiar, ChatGPT es tu opción. Por el contrario, si deseas aprender realmente, entender como funciona todo "Detrás de escenas" y saber explicar las cosas de manera adecuada, Claude debería ser tu opción.
-=======
 # Conclusión
 
 Queriendo llegar a una conclusión rápida, si buscas una explicación rápida, recordar algún término en específico, o simplemente copiar por copiar, ChatGPT es tu opción. Por el contrario, si deseas aprender realmente, entender como funciona todo "Detrás de escenas" y saber explicar las cosas de manera adecuada, Claude debería ser tu opción.
@@ -526,4 +497,3 @@ calcularPrecioFinal(59.9, 15);  // 50.92
 calcularPrecioFinal(100, 110);  // "Error: el descuento debe estar entre 0 y 100."
 ```
 
->>>>>>> 1b312e5 (Terminada la comparación entre IAs)
