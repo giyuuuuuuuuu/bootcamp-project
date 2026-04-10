@@ -177,6 +177,20 @@ En la última mejora se trabajó específicamente en reducir repetición y dejar
 - Mantiene intacta la logica de alta/edicion/eliminacion.
 - Mejora enfoque y navegacion en listas extensas.
 
+### 3) Estado vacio guiado (commit individual)
+
+**Objetivo**
+- Evitar una lista vacia sin contexto y guiar al usuario cuando no hay resultados.
+
+**Implementacion**
+- Se agrego la funcion `renderEmptyState()` en `app.js`.
+- `renderTasks()` ahora muestra una tarjeta informativa cuando no hay tareas visibles por filtros o por lista vacia.
+- Se añadieron estilos leves de entrada en `style.css`.
+
+**Impacto**
+- No altera datos ni flujos de negocio.
+- Mejora onboarding y claridad visual.
+
 
 Puedes encontrar los esquemas detallados en la carpeta `docs/design`.
 

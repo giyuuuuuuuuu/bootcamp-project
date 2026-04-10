@@ -77,3 +77,18 @@ dialog::backdrop {
   background-color: #7f1d1d;
   color: #fecaca;
 }
+
+.empty-state-card {
+  animation: fadeInUp 0.25s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

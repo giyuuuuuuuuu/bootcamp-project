@@ -240,6 +240,12 @@ function renderTasks() {
   const filteredTasks = tasks.filter(matchesCurrentFilters);
   const sortedTasks = sortTasks(filteredTasks);
 
+  if (sortedTasks.length === 0) {
+    renderEmptyState();
+    updateStats();
+    return;
+  }
+
   sortedTasks.forEach((task) => {
     const clone = taskTemplate.cloneNode(true);
     const listItem = clone.querySelector("li");
@@ -266,6 +272,20 @@ function renderTasks() {
   });
 
   updateStats();
+}
+
+/**
+ * Renderiza un estado vacio cuando no hay tareas visibles.
+ */
+function renderEmptyState() {
+  const emptyItem = document.createElement("li");
+  emptyItem.className =
+    "empty-state-card bg-white dark:bg-gray-800 p-6 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-center text-gray-500 dark:text-gray-300";
+  emptyItem.innerHTML = `
+    <p class="font-semibold">No hay tareas para mostrar</p>
+    <p class="text-sm mt-1">Prueba otro filtro o crea una nueva tarea.</p>
+  `;
+  taskList.appendChild(emptyItem);
 }
 
 /**
