@@ -57,6 +57,7 @@ const savedTheme =
 
 applyTheme(savedTheme);
 renderTasks();
+registerKeyboardShortcuts();
 
 completeAllBtn.addEventListener("click", () => {
   tasks.forEach((task) => {
@@ -423,4 +424,42 @@ function showToast(message) {
   setTimeout(() => {
     toast.remove();
   }, 2200);
+}
+
+/**
+ * Registra atajos de teclado para acelerar acciones frecuentes.
+ */
+function registerKeyboardShortcuts() {
+  document.addEventListener("keydown", (event) => {
+    const targetTag = event.target.tagName;
+    const isTypingContext =
+      targetTag === "INPUT" || targetTag === "TEXTAREA" || targetTag === "SELECT";
+
+    if (event.key === "Escape" && editModal.open) {
+      closeEditModal();
+      return;
+    }
+
+    if (event.key === "/" && !isTypingContext) {
+      event.preventDefault();
+      searchInput.focus();
+      return;
+    }
+
+    if (event.key.toLowerCase() === "n" && !isTypingContext) {
+      event.preventDefault();
+      taskInput.focus();
+      return;
+    }
+
+    if (
+      event.key === "Enter" &&
+      event.ctrlKey &&
+      editModal.open &&
+      document.activeElement === editInput
+    ) {
+      event.preventDefault();
+      saveEditBtn.click();
+    }
+  });
 }

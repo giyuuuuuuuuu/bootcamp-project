@@ -211,6 +211,24 @@ En la última mejora se trabajó específicamente en reducir repetición y dejar
 - No modifica la logica de negocio existente.
 - Mejora visibilidad de acciones y sensacion de fluidez.
 
+### 5) Atajos de teclado de productividad (commit individual)
+
+**Objetivo**
+- Reducir friccion en interacciones frecuentes sin cambiar el comportamiento funcional de la app.
+
+**Implementacion**
+- Se agrego `registerKeyboardShortcuts()` en `app.js` y se ejecuta al iniciar.
+- Atajos incluidos:
+  - `/` enfoca la busqueda.
+  - `N` enfoca el campo de nueva tarea.
+  - `Esc` cierra el modal de edicion.
+  - `Ctrl + Enter` guarda edicion cuando el foco esta en `edit-input`.
+- Se evita disparar atajos globales cuando el usuario ya esta escribiendo en inputs/selects.
+
+**Impacto**
+- Mantiene la misma logica CRUD y persistencia.
+- Mejora velocidad de uso para teclado-first users.
+
 
 Puedes encontrar los esquemas detallados en la carpeta `docs/design`.
 
