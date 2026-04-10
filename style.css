@@ -92,3 +92,30 @@ dialog::backdrop {
     transform: translateY(0);
   }
 }
+
+.toast {
+  pointer-events: auto;
+  background: #111827;
+  color: #f9fafb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  animation: toastIn 0.2s ease-out;
+}
+
+.dark .toast {
+  background: #1f2937;
+  color: #f3f4f6;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

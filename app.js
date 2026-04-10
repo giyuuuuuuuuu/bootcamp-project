@@ -18,6 +18,7 @@ const themeIcon = document.getElementById("theme-icon");
 const totalTasksElement = document.getElementById("total-tasks");
 const completedTasksElement = document.getElementById("completed-tasks");
 const pendingTasksElement = document.getElementById("pending-tasks");
+const toastContainer = document.getElementById("toast-container");
 
 const STORAGE_KEYS = {
   tasks: "myTasks",
@@ -62,11 +63,16 @@ completeAllBtn.addEventListener("click", () => {
     task.completed = true;
   });
   commitStateChange();
+  showToast("Todas las tareas fueron marcadas como completadas.");
 });
 
 clearCompleteBtn.addEventListener("click", () => {
+  const before = tasks.length;
   tasks = tasks.filter((task) => !task.completed);
   commitStateChange();
+  if (before !== tasks.length) {
+    showToast("Se eliminaron las tareas completadas.");
+  }
 });
 
 taskForm.addEventListener("submit", (event) => {
@@ -92,6 +98,7 @@ taskForm.addEventListener("submit", (event) => {
   taskInput.value = "";
   categorySelect.value = DEFAULT_CATEGORY;
   commitStateChange();
+  showToast("Tarea creada correctamente.");
 });
 
 filterButtons.forEach((button) => {
@@ -157,6 +164,7 @@ saveEditBtn.addEventListener("click", () => {
   taskToEdit.title = newTitle;
   commitStateChange();
   closeEditModal();
+  showToast("Tarea actualizada.");
 });
 
 cancelEditBtn.addEventListener("click", closeEditModal);
@@ -364,6 +372,7 @@ function deleteTaskWithAnimation(deleteButton) {
   setTimeout(() => {
     tasks = tasks.filter((task) => task.id !== taskId);
     commitStateChange();
+    showToast("Tarea eliminada.");
   }, DELETE_ANIMATION_MS);
 }
 
@@ -399,4 +408,19 @@ function updateStats() {
  */
 function saveToLocalStorage() {
   localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(tasks));
+}
+
+/**
+ * Muestra una notificacion temporal sin bloquear la interaccion.
+ * @param {string} message
+ */
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+  toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 2200);
 }

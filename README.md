@@ -191,6 +191,26 @@ En la última mejora se trabajó específicamente en reducir repetición y dejar
 - No altera datos ni flujos de negocio.
 - Mejora onboarding y claridad visual.
 
+### 4) Notificaciones toast no bloqueantes (commit individual)
+
+**Objetivo**
+- Entregar feedback de acciones clave sin interrumpir al usuario con modales bloqueantes.
+
+**Implementacion**
+- Se agrego el contenedor `toast-container` en `index.html`.
+- Se incorporo la funcion `showToast(message)` en `app.js`.
+- Se añadieron notificaciones para:
+  - crear tarea,
+  - editar tarea,
+  - eliminar tarea,
+  - completar todas,
+  - limpiar completadas.
+- Se definieron estilos y animacion en `style.css`.
+
+**Impacto**
+- No modifica la logica de negocio existente.
+- Mejora visibilidad de acciones y sensacion de fluidez.
+
 
 Puedes encontrar los esquemas detallados en la carpeta `docs/design`.
 
