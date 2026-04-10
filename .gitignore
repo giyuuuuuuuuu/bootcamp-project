@@ -9,3 +9,6 @@ Thumbs.db
 # Editor (VS Code)
 .vscode/
 *.code-workspace
+
+# Cursor local config/secrets
+.cursor/
