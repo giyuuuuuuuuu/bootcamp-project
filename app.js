@@ -5,6 +5,7 @@ const taskList = document.getElementById("task-list");
 const taskTemplate = document.getElementById("task-template").content;
 const filterButtons = document.querySelectorAll(".filter-btn");
 const searchInput = document.getElementById("search-input");
+const sortSelect = document.getElementById("sort-select");
 const editModal = document.getElementById("edit-modal");
 const editInput = document.getElementById("edit-input");
 const saveEditBtn = document.getElementById("save-edit");
@@ -39,6 +40,7 @@ let tasks = initialTasks.map(normalizeTask);
 let taskToEdit = null;
 let currentFilter = "all";
 let searchQuery = "";
+let currentSort = "recent";
 
 if (savedJson) {
   saveToLocalStorage();
@@ -108,6 +110,11 @@ taskInput.addEventListener("input", () => {
 
 searchInput.addEventListener("input", (event) => {
   searchQuery = event.target.value.toLowerCase();
+  renderTasks();
+});
+
+sortSelect.addEventListener("change", (event) => {
+  currentSort = event.target.value;
   renderTasks();
 });
 
@@ -221,7 +228,9 @@ function renderTasks() {
   taskList.innerHTML = "";
 
   const filteredTasks = tasks.filter(matchesCurrentFilters);
-  filteredTasks.forEach((task) => {
+  const sortedTasks = sortTasks(filteredTasks);
+
+  sortedTasks.forEach((task) => {
     const clone = taskTemplate.cloneNode(true);
     const listItem = clone.querySelector("li");
     const textElement = listItem.querySelector(".task-text");
@@ -247,6 +256,29 @@ function renderTasks() {
   });
 
   updateStats();
+}
+
+/**
+ * Ordena una copia de tareas segun el criterio activo.
+ * @param {{ id:number, title:string, completed:boolean, category:string }[]} list
+ * @returns {{ id:number, title:string, completed:boolean, category:string }[]}
+ */
+function sortTasks(list) {
+  const sorted = [...list];
+
+  if (currentSort === "oldest") {
+    return sorted.sort((a, b) => a.id - b.id);
+  }
+
+  if (currentSort === "alphabetical") {
+    return sorted.sort((a, b) => a.title.localeCompare(b.title, "es"));
+  }
+
+  if (currentSort === "status") {
+    return sorted.sort((a, b) => Number(a.completed) - Number(b.completed));
+  }
+
+  return sorted.sort((a, b) => b.id - a.id);
 }
 
 /**

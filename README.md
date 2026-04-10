@@ -142,8 +142,194 @@ En la última mejora se trabajó específicamente en reducir repetición y dejar
 
 -----
 
+## Registro de mejoras UI/UX (Senior Frontend)
+
+### 1) Ordenamiento de tareas (commit individual)
+
+**Objetivo**
+- Permitir ordenar la vista de tareas sin modificar la estructura de datos ni la logica principal.
+
+**Implementacion**
+- Se agrego un selector visual `sort-select` en la seccion de lista.
+- Se introdujo el estado `currentSort` en `app.js`.
+- Se incorporo la funcion `sortTasks(list)` que ordena una copia filtrada antes de renderizar.
+- Criterios disponibles:
+  - `recent` (mas recientes)
+  - `oldest` (mas antiguas)
+  - `alphabetical` (A-Z)
+  - `status` (pendientes primero)
+
+**Impacto**
+- No cambia CRUD, persistencia ni filtros existentes.
+- Mejora lectura y control cuando hay muchas tareas.
+
 
 Puedes encontrar los esquemas detallados en la carpeta `docs/design`.
 
 **ENTREGA VERCEL**
 bootcamp-project-lemon.vercel.app
+
+## MCP en Cursor (Fetch, GitHub y Filesystem)
+
+En esta fase se configuraron y validaron los servidores MCP necesarios para trabajar desde Cursor con acceso a web, GitHub y archivos del proyecto.
+
+### Objetivo
+
+- Integrar `fetch`, `github` y `filesystem` en Cursor.
+- Dejar configuración por proyecto (versionable y reproducible).
+- Documentar instalación, pruebas y resolución de errores comunes en Windows + PowerShell.
+
+### Configuración aplicada
+
+Se creó el archivo `.cursor/mcp.json` con la siguiente estructura:
+
+```json
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "GITHUB_PAT"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\-----\\Desktop\\booptcamp-project"
+      ]
+    }
+  }
+}
+```
+
+### Qué se hizo exactamente
+
+1. Se añadió `fetch` para consultas HTTP/HTTPS desde el chat de Cursor.
+2. Se añadió `github` con variable `GITHUB_PERSONAL_ACCESS_TOKEN` para operar sobre repositorios/issues/PRs.
+3. Se añadió `filesystem` limitado a la carpeta de este proyecto para mantener el alcance controlado.
+4. Se dejó documentación de uso y validación en este README.
+
+### Requisitos previos
+
+- `Node.js` LTS instalado (incluye `npm` y `npx`).
+- `GitHub CLI (gh)` instalado y autenticado.
+- Token PAT de GitHub vigente y con permisos adecuados.
+
+### Guía resumida de instalación en Windows
+
+#### 1) Instalar Node.js
+
+- Descargar LTS desde `https://nodejs.org/` o instalar con:
+  - `winget install OpenJS.NodeJS.LTS`
+- Verificar:
+  - `node -v`
+  - `npm -v`
+  - `npx -v`
+
+#### 2) Resolver error de PowerShell con `npm`/`npx`
+
+Si aparece `PSSecurityException` por scripts `.ps1`:
+
+- Ejecutar:
+  - `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`
+- Cerrar y abrir terminal.
+- Verificar de nuevo `npm -v` y `npx -v`.
+
+Alternativa puntual:
+
+- `npm.cmd -v`
+- `npx.cmd -v`
+
+#### 3) Instalar GitHub CLI
+
+- Con winget:
+  - `winget install --id GitHub.cli -e`
+- Verificar:
+  - `gh --version`
+- Login:
+  - `gh auth login`
+  - `gh auth status`
+
+Si `gh` no se reconoce en terminal aunque esté instalado, añadir al `PATH` de usuario:
+
+- `C:\Program Files\GitHub CLI`
+
+### Token PAT (GitHub)
+
+El PAT (Personal Access Token) es una credencial personal para que Cursor/MCP opere en GitHub sin usar contraseña.
+
+Recomendado:
+
+- Tipo `Fine-grained token`.
+- Expiración (30-90 días).
+- Acceso sólo a repos necesarios.
+- Permisos mínimos:
+  - `Contents: Read`
+  - `Pull requests: Read and write` (o `Read`)
+  - `Issues: Read and write` (o `Read`)
+
+### Pruebas realizadas
+
+#### 1) Prueba `fetch`
+
+- Se consultó una URL pública de Apple Store.
+- Resultado esperado y obtenido: lectura correcta del título y primer encabezado de la página.
+
+#### 2) Prueba `filesystem`
+
+- Se listaron los archivos del proyecto.
+- Resultado esperado y obtenido: acceso correcto al árbol de archivos dentro del directorio permitido.
+
+#### 3) Prueba `github`
+
+- Se validó autenticación de GitHub CLI.
+- Se listaron repositorios de la cuenta.
+- Se comprobó estado de issues en repositorios principales (sin issues abiertos en los revisados).
+
+### Incidencias detectadas y solución
+
+- **Error `npm.ps1` / `npx.ps1` bloqueado (ExecutionPolicy):**
+  - Solución: `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
+- **`gh` no reconocido en PATH:**
+  - Solución: ejecutar por ruta completa temporalmente y añadir `C:\Program Files\GitHub CLI` al PATH de usuario.
+- **Acceso a repo por URL web con 404 (caso puntual):**
+  - Verificar remoto con `git remote -v` y confirmar owner/repo correcto.
+
+### Checklist de validación rápida
+
+- [x] `node -v` responde
+- [x] `npm -v` y `npx -v` responden sin error de policy
+- [x] `gh --version` responde
+- [x] `gh auth status` muestra sesión activa
+- [x] `.cursor/mcp.json` existe y tiene JSON válido
+- [x] `GITHUB_PERSONAL_ACCESS_TOKEN` está configurado y no es placeholder
+- [x] Cursor reiniciado tras cambios
+
+### Seguridad y buenas prácticas
+
+- No subir tokens al repositorio.
+- Rotar/revocar el PAT si se expone.
+- Mantener `filesystem` acotado al proyecto.
+- Usar permisos mínimos necesarios en GitHub.
+
+### Cuándo MCP es útil en proyectos grandes
+
+MCP aporta más valor cuando el proyecto tiene muchos repos, equipos o fuentes de datos, y se necesita reducir cambios de contexto entre herramientas.
+
+Casos típicos:
+
+- **Monorepos y multi-repo:** consultar código, documentación y scripts desde un solo flujo de trabajo.
+- **Gestión de incidencias y PRs a escala:** leer/crear issues, revisar PRs y automatizar tareas repetitivas en GitHub.
+- **Debugging con contexto real:** combinar logs, archivos y datos externos para diagnosticar problemas más rápido.
+- **Documentación viva:** validar enlaces, extraer fuentes y mantener documentación técnica actualizada.
+- **Onboarding de equipos:** nuevos miembros entienden arquitectura y estado del proyecto sin saltar entre muchas plataformas.
+- **Automatización segura:** ejecutar flujos con permisos controlados (scopes mínimos y acceso acotado por servidor).
+
+En resumen, MCP es especialmente útil cuando la complejidad del entorno crece y se necesita velocidad sin perder trazabilidad ni seguridad.

@@ -149,6 +149,24 @@
             </button>
           </div>
 
+          <div class="mb-6 flex justify-end">
+            <label
+              for="sort-select"
+              class="sr-only"
+              >Ordenar tareas</label
+            >
+            <select
+              id="sort-select"
+              class="p-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600 text-sm"
+              aria-label="Ordenar tareas"
+            >
+              <option value="recent">Mas recientes</option>
+              <option value="oldest">Mas antiguas</option>
+              <option value="alphabetical">A-Z</option>
+              <option value="status">Pendientes primero</option>
+            </select>
+          </div>
+
           <ul id="task-list" class="space-y-3"></ul>
 
           <template id="task-template">
