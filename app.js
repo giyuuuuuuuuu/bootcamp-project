@@ -5,6 +5,7 @@ const taskList = document.getElementById("task-list");
 const taskTemplate = document.getElementById("task-template").content;
 const filterButtons = document.querySelectorAll(".filter-btn");
 const searchInput = document.getElementById("search-input");
+const categoryFilter = document.getElementById("category-filter");
 const sortSelect = document.getElementById("sort-select");
 const editModal = document.getElementById("edit-modal");
 const editInput = document.getElementById("edit-input");
@@ -40,6 +41,7 @@ let tasks = initialTasks.map(normalizeTask);
 let taskToEdit = null;
 let currentFilter = "all";
 let searchQuery = "";
+let currentCategoryFilter = "all";
 let currentSort = "recent";
 
 if (savedJson) {
@@ -110,6 +112,11 @@ taskInput.addEventListener("input", () => {
 
 searchInput.addEventListener("input", (event) => {
   searchQuery = event.target.value.toLowerCase();
+  renderTasks();
+});
+
+categoryFilter.addEventListener("change", (event) => {
+  currentCategoryFilter = event.target.value;
   renderTasks();
 });
 
@@ -217,7 +224,10 @@ function matchesCurrentFilters(task) {
     .toLowerCase()
     .includes(searchQuery);
 
-  return matchesStateFilter && matchesSearchFilter;
+  const matchesCategoryFilter =
+    currentCategoryFilter === "all" || task.category === currentCategoryFilter;
+
+  return matchesStateFilter && matchesSearchFilter && matchesCategoryFilter;
 }
 
 /**

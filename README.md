@@ -163,6 +163,20 @@ En la última mejora se trabajó específicamente en reducir repetición y dejar
 - No cambia CRUD, persistencia ni filtros existentes.
 - Mejora lectura y control cuando hay muchas tareas.
 
+### 2) Filtro por categoria (commit individual)
+
+**Objetivo**
+- Permitir segmentar tareas por tipo (`Personal`, `Trabajo`, `Estudio`, `Salud`) sin alterar el modelo ni almacenamiento.
+
+**Implementacion**
+- Se agrego un selector `category-filter` en el panel lateral.
+- Se introdujo el estado de vista `currentCategoryFilter`.
+- Se extendio `matchesCurrentFilters(task)` para incluir coincidencia por categoria.
+
+**Impacto**
+- Mantiene intacta la logica de alta/edicion/eliminacion.
+- Mejora enfoque y navegacion en listas extensas.
+
 
 Puedes encontrar los esquemas detallados en la carpeta `docs/design`.
 
