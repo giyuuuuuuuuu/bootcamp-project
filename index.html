@@ -30,7 +30,7 @@
       </h1>
       <button
         id="theme-toggle"
-        class="p-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:scale-105 transition-all text-xl shadow-sm"
+        class="p-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:scale-105 transition-transform text-xl shadow-sm"
         aria-label="Cambiar tema"
       >
         <span id="theme-icon">🌙</span>
@@ -88,7 +88,7 @@
           >
           <select
             id="category-filter"
-            class="w-full p-2.5 rounded-xl border dark:bg-gray-800 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+            class="task-select w-full p-2.5 rounded-xl border dark:bg-gray-800 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
           >
             <option value="all">Todas</option>
             <option value="personal">Personal</option>
@@ -119,13 +119,27 @@
             />
             <div class="flex flex-col gap-2">
               <label
+                for="task-description"
+                class="font-medium text-gray-600 dark:text-gray-300"
+                >Descripción (opcional)</label
+              >
+              <textarea
+                id="task-description"
+                rows="3"
+                maxlength="280"
+                placeholder="Añade más contexto para esta tarea..."
+                class="task-textarea p-3 rounded-xl border-2 dark:bg-gray-800 dark:border-gray-700 focus:border-blue-500 outline-none transition-all resize-y"
+              ></textarea>
+            </div>
+            <div class="flex flex-col gap-2">
+              <label
                 for="category-select"
                 class="font-medium text-gray-600 dark:text-gray-300"
                 >Categoría</label
               >
               <select
                 id="category-select"
-                class="p-3 rounded-xl border-2 dark:bg-gray-800 dark:border-gray-700 focus:border-blue-500 outline-none transition-all"
+                class="task-select p-3 rounded-xl border-2 dark:bg-gray-800 dark:border-gray-700 focus:border-blue-500 outline-none transition-all"
               >
                 <option value="personal">Personal</option>
                 <option value="work">Trabajo</option>
@@ -205,7 +219,7 @@
             >
             <select
               id="sort-select"
-              class="p-2.5 rounded-xl border dark:bg-gray-800 dark:border-gray-700 text-sm"
+              class="task-select p-2.5 rounded-xl border dark:bg-gray-800 dark:border-gray-700 text-sm"
               aria-label="Ordenar tareas"
             >
               <option value="recent">Mas recientes</option>
@@ -224,12 +238,15 @@
               <div class="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  class="task-checkbox w-5 h-5 accent-blue-600"
+                  class="task-checkbox"
                 />
                 <div class="flex flex-col gap-1">
                   <span
                     class="task-text font-medium text-gray-700 dark:text-gray-200"
                   ></span>
+                  <p
+                    class="task-description text-sm text-gray-500 dark:text-gray-400 hidden"
+                  ></p>
                   <span class="task-category-badge task-category-personal"
                     >Personal</span
                   >
@@ -266,13 +283,20 @@
       <div
         class="bg-white dark:bg-gray-800 p-8 w-80 md:w-96 shadow-2xl border border-gray-200 dark:border-gray-700"
       >
-        <form method="dialog" class="flex flex-col gap-4">
+        <form class="flex flex-col gap-4">
           <h3 class="text-xl font-bold text-blue-600">Editar Tarea</h3>
           <input
             type="text"
             id="edit-input"
             class="w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <textarea
+            id="edit-description"
+            rows="3"
+            maxlength="280"
+            placeholder="Descripción (opcional)"
+            class="task-textarea w-full p-3 rounded-lg border dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+          ></textarea>
           <div class="flex justify-end gap-3 mt-4">
             <button
               type="button"
@@ -290,6 +314,44 @@
             </button>
           </div>
         </form>
+      </div>
+    </dialog>
+
+    <dialog
+      id="confirm-delete-modal"
+      class="rounded-2xl p-0 overflow-hidden bg-transparent"
+    >
+      <div
+        class="bg-white dark:bg-gray-900 p-6 w-[22rem] md:w-[26rem] shadow-2xl border border-gray-200 dark:border-gray-700"
+      >
+        <h3
+          id="confirm-delete-title"
+          class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+        >
+          Eliminar tarea
+        </h3>
+        <p
+          id="confirm-delete-message"
+          class="mt-2 text-sm text-gray-600 dark:text-gray-300"
+        >
+          ¿Quieres borrar esta tarea?
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            id="confirm-delete-cancel"
+            class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            id="confirm-delete-accept"
+            class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm"
+          >
+            Eliminar
+          </button>
+        </div>
       </div>
     </dialog>
 

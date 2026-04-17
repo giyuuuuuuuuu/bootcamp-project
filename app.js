@@ -9,7 +9,9 @@ import {
 
 const taskForm = document.getElementById("todo-form");
 const taskInput = document.getElementById("task-input");
+const taskDescriptionInput = document.getElementById("task-description");
 const categorySelect = document.getElementById("category-select");
+const addTaskSubmitBtn = taskForm.querySelector("button[type='submit']");
 const taskList = document.getElementById("task-list");
 const taskTemplate = document.getElementById("task-template").content;
 const filterButtons = document.querySelectorAll(".filter-btn");
@@ -19,8 +21,14 @@ const categoryFilter = document.getElementById("category-filter");
 const sortSelect = document.getElementById("sort-select");
 const editModal = document.getElementById("edit-modal");
 const editInput = document.getElementById("edit-input");
+const editDescriptionInput = document.getElementById("edit-description");
 const saveEditBtn = document.getElementById("save-edit");
 const cancelEditBtn = document.getElementById("cancel-edit");
+const confirmDeleteModal = document.getElementById("confirm-delete-modal");
+const confirmDeleteTitle = document.getElementById("confirm-delete-title");
+const confirmDeleteMessage = document.getElementById("confirm-delete-message");
+const confirmDeleteCancelBtn = document.getElementById("confirm-delete-cancel");
+const confirmDeleteAcceptBtn = document.getElementById("confirm-delete-accept");
 const completeAllBtn = document.getElementById("complete-all-btn");
 const clearCompleteBtn = document.getElementById("clear-completed-btn");
 const themeToggleBtn = document.getElementById("theme-toggle");
@@ -34,6 +42,8 @@ const DEFAULT_CATEGORY = "personal";
 const TASK_INPUT_DEFAULT_BORDER = "#ddd";
 const TASK_INPUT_ERROR_BORDER = "#ef4444";
 const THEME_STORAGE_KEY = "taskflow-theme";
+const SEARCH_THROTTLE_MS = 140;
+const MAX_VISIBLE_TOASTS = 3;
 
 const CATEGORY_LABELS = {
   personal: "Personal",
@@ -51,6 +61,10 @@ let currentSort = "recent";
 let networkState = "idle";
 let networkMessage = "";
 let highlightedTaskId = null;
+let searchThrottleTimeout = null;
+let renderFrameId = null;
+const inFlightTaskIds = new Set();
+let confirmModalOpen = false;
 
 initializeTheme();
 renderTasks();
@@ -70,24 +84,33 @@ taskForm.addEventListener("submit", async (event) => {
   clearNetworkMessage();
 
   const title = taskInput.value.trim();
-  if (title === "") {
-    taskInput.placeholder = "Debe introducir una tarea";
+  if (!isMeaningfulTitle(title)) {
+    taskInput.placeholder = "Escribe un título real";
     taskInput.style.borderColor = TASK_INPUT_ERROR_BORDER;
     taskInput.focus();
+    showToast("El título debe contener letras o números.", "info");
     return;
   }
 
   const category = getSafeCategory(categorySelect.value);
-  setNetworkState("loading", "Creando tarea...");
+  const description = normalizeDescription(taskDescriptionInput.value);
+  setButtonLoading(addTaskSubmitBtn, true, "Añadiendo...");
 
   try {
-    const createdTask = await createTask({ title, category });
-    highlightedTaskId = createdTask?.id ? String(createdTask.id) : null;
+    const createdTask = await createTask({ title, category, description });
+    const normalizedTask = normalizeTask(createdTask);
+    tasks.unshift(normalizedTask);
+    highlightedTaskId = normalizedTask.id;
     taskInput.value = "";
+    taskDescriptionInput.value = "";
     categorySelect.value = DEFAULT_CATEGORY;
-    await loadTasks("Tarea creada correctamente.");
+    setNetworkState("success", "Tarea creada correctamente.");
+    renderTasks();
+    showToast("Tarea creada correctamente.", "success");
   } catch (error) {
     handleNetworkError(error);
+  } finally {
+    setButtonLoading(addTaskSubmitBtn, false);
   }
 });
 
@@ -109,7 +132,13 @@ taskInput.addEventListener("input", () => {
 
 searchInput.addEventListener("input", (event) => {
   searchQuery = event.target.value.toLowerCase();
-  renderTasks();
+  if (searchThrottleTimeout) {
+    clearTimeout(searchThrottleTimeout);
+  }
+
+  searchThrottleTimeout = setTimeout(() => {
+    renderTasks();
+  }, SEARCH_THROTTLE_MS);
 });
 
 clearSearchBtn.addEventListener("click", () => {
@@ -144,7 +173,7 @@ taskList.addEventListener("click", async (event) => {
   }
 
   if (target.classList.contains("delete-btn")) {
-    await deleteTaskById(target.dataset.id);
+    await deleteTaskById(target.dataset.id, target);
     return;
   }
 
@@ -153,31 +182,41 @@ taskList.addEventListener("click", async (event) => {
   }
 });
 
-saveEditBtn.addEventListener("click", async () => {
+editModal.addEventListener("submit", async (event) => {
+  event.preventDefault();
   if (!taskToEdit) return;
+  if (inFlightTaskIds.has(String(taskToEdit.id))) return;
 
   const newTitle = editInput.value.trim();
-  if (newTitle === "") {
-    showToast("El título no puede estar vacío.", "info");
+  if (!isMeaningfulTitle(newTitle)) {
+    showToast("El título debe contener letras o números.", "info");
     return;
   }
-
-  setNetworkState("loading", "Actualizando tarea...");
+  const newDescription = normalizeDescription(editDescriptionInput.value);
+  const editTaskId = String(taskToEdit.id);
+  inFlightTaskIds.add(editTaskId);
+  setButtonLoading(saveEditBtn, true, "Guardando...");
 
   try {
-    await updateTask(taskToEdit.id, { title: newTitle });
+    const updatedTask = await updateTask(taskToEdit.id, {
+      title: newTitle,
+      description: newDescription,
+    });
+    upsertTaskInMemory(normalizeTask(updatedTask));
     closeEditModal();
-    await loadTasks("Tarea actualizada.");
+    renderTasks();
+    showToast("Tarea actualizada.", "success");
   } catch (error) {
     handleNetworkError(error);
+  } finally {
+    inFlightTaskIds.delete(editTaskId);
+    setButtonLoading(saveEditBtn, false);
   }
 });
 
 cancelEditBtn.addEventListener("click", closeEditModal);
 
 async function loadTasks(successMessage = "") {
-  setNetworkState("loading", "Cargando tareas...");
-
   try {
     const remoteTasks = await getTasks();
     tasks = remoteTasks.map(normalizeTask);
@@ -191,52 +230,73 @@ async function loadTasks(successMessage = "") {
   }
 }
 
-async function deleteTaskById(taskId) {
+async function deleteTaskById(taskId, deleteButton = null) {
   if (!taskId) return;
+  const normalizedTaskId = String(taskId);
+  if (inFlightTaskIds.has(normalizedTaskId)) return;
 
   const taskToDelete = tasks.find((task) => String(task.id) === String(taskId));
   const taskTitle =
     taskToDelete && taskToDelete.title ? `: "${taskToDelete.title}"` : "";
-  const shouldDelete = confirm(`¿Quieres borrar la tarea${taskTitle}?`);
+  const shouldDelete = await openConfirmModal({
+    title: "Eliminar tarea",
+    message: `¿Quieres borrar la tarea${taskTitle}?`,
+    acceptLabel: "Eliminar",
+    acceptVariant: "danger",
+  });
 
   if (!shouldDelete) return;
 
-  setNetworkState("loading", "Eliminando tarea...");
+  inFlightTaskIds.add(normalizedTaskId);
+  setButtonLoading(deleteButton, true, "Eliminando...");
   await animateTaskRemoval(taskId);
 
   try {
     await deleteTask(taskId);
-    await loadTasks("Tarea eliminada.");
+    removeTaskFromMemory(taskId);
+    renderTasks();
+    showToast("Tarea eliminada.", "success");
   } catch (error) {
     renderTasks();
     handleNetworkError(error);
+  } finally {
+    inFlightTaskIds.delete(normalizedTaskId);
+    setButtonLoading(deleteButton, false);
   }
 }
 
 async function toggleTaskState(taskId) {
   if (!taskId) return;
+  const normalizedTaskId = String(taskId);
+  if (inFlightTaskIds.has(normalizedTaskId)) return;
 
   const task = tasks.find((item) => String(item.id) === String(taskId));
   if (!task) return;
 
-  setNetworkState("loading", "Actualizando estado...");
-
+  inFlightTaskIds.add(normalizedTaskId);
   try {
-    await updateTask(task.id, { completed: !task.completed });
-    await loadTasks("Estado actualizado.");
+    const updatedTask = await updateTask(task.id, { completed: !task.completed });
+    upsertTaskInMemory(normalizeTask(updatedTask));
+    renderTasks();
   } catch (error) {
     handleNetworkError(error);
+  } finally {
+    inFlightTaskIds.delete(normalizedTaskId);
   }
 }
 
 async function completeAllTasksFromApi() {
-  setNetworkState("loading", "Marcando todas como completadas...");
+  setButtonLoading(completeAllBtn, true, "Completando...");
 
   try {
     await completeAllTasks();
-    await loadTasks("Todas las tareas fueron completadas.");
+    tasks = tasks.map((task) => ({ ...task, completed: true }));
+    renderTasks();
+    showToast("Todas las tareas fueron completadas.", "success");
   } catch (error) {
     handleNetworkError(error);
+  } finally {
+    setButtonLoading(completeAllBtn, false);
   }
 }
 
@@ -250,15 +310,28 @@ async function clearCompletedTasksFromApi() {
     return;
   }
 
-  setNetworkState("loading", "Eliminando tareas completadas...");
+  const shouldDeleteCompleted = await openConfirmModal({
+    title: "Borrar completadas",
+    message: "¿Quieres borrar todas las tareas completadas?",
+    acceptLabel: "Borrar",
+    acceptVariant: "danger",
+  });
+
+  if (!shouldDeleteCompleted) return;
+
+  setButtonLoading(clearCompleteBtn, true, "Borrando...");
   await animateTasksRemoval(completedTaskIds);
 
   try {
     await clearCompletedTasks();
-    await loadTasks("Se eliminaron las tareas completadas.");
+    tasks = tasks.filter((task) => !task.completed);
+    renderTasks();
+    showToast("Se eliminaron las tareas completadas.", "success");
   } catch (error) {
     renderTasks();
     handleNetworkError(error);
+  } finally {
+    setButtonLoading(clearCompleteBtn, false);
   }
 }
 
@@ -269,25 +342,136 @@ function openEditModalById(taskId) {
   if (!taskToEdit) return;
 
   editInput.value = taskToEdit.title;
+  editDescriptionInput.value = taskToEdit.description || "";
   editModal.showModal();
 }
 
 function closeEditModal() {
   editModal.close();
   taskToEdit = null;
+  editInput.value = "";
+  editDescriptionInput.value = "";
+}
+
+function openConfirmModal({
+  title = "Confirmar acción",
+  message = "¿Seguro que quieres continuar?",
+  acceptLabel = "Aceptar",
+  acceptVariant = "danger",
+}) {
+  if (confirmModalOpen) {
+    return Promise.resolve(false);
+  }
+
+  return new Promise((resolve) => {
+    confirmModalOpen = true;
+    confirmDeleteTitle.textContent = title;
+    confirmDeleteMessage.textContent = message;
+    confirmDeleteAcceptBtn.textContent = acceptLabel;
+    confirmDeleteAcceptBtn.classList.toggle("is-danger", acceptVariant === "danger");
+    confirmDeleteAcceptBtn.classList.toggle("is-primary", acceptVariant !== "danger");
+    confirmDeleteModal.showModal();
+
+    const cleanup = () => {
+      confirmModalOpen = false;
+      confirmDeleteAcceptBtn.removeEventListener("click", handleAccept);
+      confirmDeleteCancelBtn.removeEventListener("click", handleCancel);
+      confirmDeleteModal.removeEventListener("cancel", handleCancel);
+      confirmDeleteModal.removeEventListener("close", handleClose);
+    };
+
+    const handleAccept = () => {
+      cleanup();
+      confirmDeleteModal.close();
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      confirmDeleteModal.close();
+      resolve(false);
+    };
+
+    const handleClose = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    confirmDeleteAcceptBtn.addEventListener("click", handleAccept);
+    confirmDeleteCancelBtn.addEventListener("click", handleCancel);
+    confirmDeleteModal.addEventListener("cancel", handleCancel);
+    confirmDeleteModal.addEventListener("close", handleClose);
+  });
+}
+
+function setButtonLoading(button, isLoading, loadingText = "Procesando...") {
+  if (!button) return;
+
+  if (isLoading) {
+    if (!button.dataset.originalText) {
+      button.dataset.originalText = button.textContent.trim();
+    }
+
+    button.style.minWidth = `${button.offsetWidth}px`;
+    button.disabled = true;
+    button.classList.add("is-loading");
+    button.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span>${loadingText}</span>`;
+    return;
+  }
+
+  button.disabled = false;
+  button.classList.remove("is-loading");
+  button.style.minWidth = "";
+
+  if (button.dataset.originalText) {
+    button.textContent = button.dataset.originalText;
+    delete button.dataset.originalText;
+  }
 }
 
 function normalizeTask(task) {
+  const fallbackTimestamp = Number.parseInt(String(task.id), 10);
   return {
     id: String(task.id),
     title: task.title,
+    description: normalizeDescription(task.description),
     completed: Boolean(task.completed),
     category: getSafeCategory(task.category),
+    createdAt:
+      typeof task.createdAt === "string"
+        ? task.createdAt
+        : Number.isFinite(fallbackTimestamp)
+          ? new Date(fallbackTimestamp).toISOString()
+          : new Date().toISOString(),
   };
 }
 
 function getSafeCategory(category) {
   return CATEGORY_LABELS[category] ? category : DEFAULT_CATEGORY;
+}
+
+function isMeaningfulTitle(title) {
+  return /[\p{L}\p{N}]/u.test(title);
+}
+
+function normalizeDescription(description) {
+  if (typeof description !== "string") return "";
+  return description.trim();
+}
+
+function upsertTaskInMemory(taskToUpsert) {
+  const taskIndex = tasks.findIndex((task) => String(task.id) === String(taskToUpsert.id));
+
+  if (taskIndex === -1) {
+    tasks.unshift(taskToUpsert);
+    return;
+  }
+
+  tasks[taskIndex] = { ...tasks[taskIndex], ...taskToUpsert };
+}
+
+function removeTaskFromMemory(taskId) {
+  tasks = tasks.filter((task) => String(task.id) !== String(taskId));
 }
 
 function matchesCurrentFilters(task) {
@@ -304,26 +488,44 @@ function matchesCurrentFilters(task) {
 }
 
 function renderTasks() {
-  taskList.innerHTML = "";
+  if (renderFrameId !== null) return;
 
+  renderFrameId = window.requestAnimationFrame(() => {
+    renderFrameId = null;
+    renderTasksNow();
+  });
+}
+
+function renderTasksNow() {
   const filteredTasks = tasks.filter(matchesCurrentFilters);
   const sortedTasks = sortTasks(filteredTasks);
 
   if (sortedTasks.length === 0) {
+    taskList.replaceChildren();
     renderEmptyState();
     updateStats();
     return;
   }
 
+  const fragment = document.createDocumentFragment();
+
   sortedTasks.forEach((task) => {
     const clone = taskTemplate.cloneNode(true);
     const listItem = clone.querySelector("li");
     const textElement = listItem.querySelector(".task-text");
+    const descriptionElement = listItem.querySelector(".task-description");
     const checkbox = listItem.querySelector(".task-checkbox");
     const categoryBadge = listItem.querySelector(".task-category-badge");
     const category = getSafeCategory(task.category);
 
     textElement.textContent = task.title;
+    if (task.description) {
+      descriptionElement.textContent = task.description;
+      descriptionElement.classList.remove("hidden");
+    } else {
+      descriptionElement.textContent = "";
+      descriptionElement.classList.add("hidden");
+    }
     categoryBadge.textContent = CATEGORY_LABELS[category];
     categoryBadge.className = `task-category-badge task-category-${category}`;
 
@@ -341,8 +543,10 @@ function renderTasks() {
       checkbox.checked = true;
     }
 
-    taskList.appendChild(clone);
+    fragment.appendChild(clone);
   });
+
+  taskList.replaceChildren(fragment);
 
   updateStats();
   highlightedTaskId = null;
@@ -362,10 +566,14 @@ function animateTasksRemoval(taskIds) {
     return Promise.resolve();
   }
 
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+    itemsToAnimate.forEach((item) => item.classList.add("task-removing"));
+    return Promise.resolve();
+  }
+
   return new Promise((resolve) => {
     let finishedAnimations = 0;
-
-    const markAnimationDone = () => {
+    const onAnimationFinished = () => {
       finishedAnimations += 1;
       if (finishedAnimations >= itemsToAnimate.length) {
         resolve();
@@ -373,20 +581,17 @@ function animateTasksRemoval(taskIds) {
     };
 
     itemsToAnimate.forEach((item, index) => {
-      const delayMs = index * 45;
-
-      setTimeout(() => {
-        let resolved = false;
-        const finish = () => {
-          if (resolved) return;
-          resolved = true;
-          markAnimationDone();
-        };
-
-        item.classList.add("task-removing");
-        item.addEventListener("transitionend", finish, { once: true });
-        setTimeout(finish, 420);
-      }, delayMs);
+      item.style.transitionDelay = `${index * 36}ms`;
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        item.style.transitionDelay = "";
+        onAnimationFinished();
+      };
+      item.addEventListener("transitionend", finish, { once: true });
+      item.classList.add("task-removing");
+      window.setTimeout(finish, 260 + index * 36);
     });
   });
 }
@@ -404,9 +609,15 @@ function renderEmptyState() {
 
 function sortTasks(list) {
   const sorted = [...list];
+  const toTimestamp = (task) => {
+    const parsed = Date.parse(task.createdAt);
+    if (Number.isFinite(parsed)) return parsed;
+    const fromId = Number.parseInt(String(task.id), 10);
+    return Number.isFinite(fromId) ? fromId : 0;
+  };
 
   if (currentSort === "oldest") {
-    return sorted.sort((a, b) => Number(a.id) - Number(b.id));
+    return sorted.sort((a, b) => toTimestamp(a) - toTimestamp(b));
   }
 
   if (currentSort === "alphabetical") {
@@ -417,7 +628,7 @@ function sortTasks(list) {
     return sorted.sort((a, b) => Number(a.completed) - Number(b.completed));
   }
 
-  return sorted.sort((a, b) => Number(b.id) - Number(a.id));
+  return sorted.sort((a, b) => toTimestamp(b) - toTimestamp(a));
 }
 
 function setNetworkState(state, message = "") {
@@ -446,8 +657,12 @@ function handleNetworkError(error) {
 
 function applyTheme(theme) {
   const isDark = theme === "dark";
+  document.documentElement.classList.add("theme-switching");
   document.documentElement.classList.toggle("dark", isDark);
   themeIcon.textContent = isDark ? "☀️" : "🌙";
+  window.setTimeout(() => {
+    document.documentElement.classList.remove("theme-switching");
+  }, 140);
 
   try {
     localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
@@ -479,7 +694,10 @@ function getStoredTheme() {
 
 function updateStats() {
   const total = tasks.length;
-  const completed = tasks.filter((task) => task.completed).length;
+  let completed = 0;
+  for (const task of tasks) {
+    if (task.completed) completed += 1;
+  }
   const pending = total - completed;
 
   totalTasksElement.textContent = total;
@@ -492,6 +710,10 @@ function showToast(message, type = "info") {
   const toast = document.createElement("div");
   toast.className = `toast toast-${validType}`;
   toast.textContent = message;
+
+  while (toastContainer.children.length >= MAX_VISIBLE_TOASTS) {
+    toastContainer.firstElementChild?.remove();
+  }
   toastContainer.appendChild(toast);
 
   setTimeout(() => {
@@ -509,7 +731,7 @@ function registerKeyboardShortcuts() {
       targetTag === "INPUT" || targetTag === "TEXTAREA" || targetTag === "SELECT";
 
     if (event.key === "Escape" && editModal.open) {
-      editModal.close();
+      closeEditModal();
       return;
     }
 

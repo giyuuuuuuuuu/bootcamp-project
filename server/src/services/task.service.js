@@ -9,8 +9,10 @@ function crearTarea(data) {
   const nuevaTarea = {
     id: String(nextId++),
     title: data.title,
+    description: data.description || "",
     completed: false,
     category: data.category || "personal",
+    createdAt: new Date().toISOString(),
   };
 
   tasks.push(nuevaTarea);
@@ -44,6 +46,9 @@ function actualizarTarea(id, data) {
 
   if (typeof data.category === "string" && data.category.trim() !== "") {
     task.category = data.category;
+  }
+  if (typeof data.description === "string") {
+    task.description = data.description;
   }
 
   return task;

@@ -1,5 +1,6 @@
 const LOCAL_API_ORIGIN = "http://localhost:3000";
 const PRODUCTION_API_BASE_PATH = "/api/v1/tasks";
+const REQUEST_TIMEOUT_MS = 8000;
 
 function getBaseUrl() {
   const hostname = window.location.hostname;
@@ -18,7 +19,21 @@ function getBaseUrl() {
 const BASE_URL = getBaseUrl();
 
 async function request(url, options = {}) {
-  const response = await fetch(url, options);
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    window.clearTimeout(timeoutId);
+    if (error.name === "AbortError") {
+      const timeoutError = new Error("La solicitud superó el tiempo máximo de espera.");
+      timeoutError.status = 408;
+      throw timeoutError;
+    }
+    throw error;
+  }
+  window.clearTimeout(timeoutId);
   const responseText = response.status === 204 ? "" : await response.text();
   const contentType = response.headers.get("content-type") || "";
   const canBeJson =

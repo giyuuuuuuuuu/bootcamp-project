@@ -15,16 +15,103 @@
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+}
+
+.task-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #6b7280 50%),
+    linear-gradient(135deg, #6b7280 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 13px) calc(50% - 3px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2.2rem !important;
+}
+
+.task-textarea {
+  line-height: 1.35;
+}
+
+.task-textarea::placeholder {
+  color: #94a3b8;
+}
+
+.dark .task-textarea::placeholder {
+  color: #64748b;
+}
+
+.dark .task-select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, #9ca3af 50%),
+    linear-gradient(135deg, #9ca3af 50%, transparent 50%);
+}
+
+.task-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  border: 1.8px solid #93c5fd;
+  background: #fff;
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.task-checkbox::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  transform: scale(0);
+  transition: transform 0.18s ease;
+  background: #2563eb;
+}
+
+.task-checkbox:hover {
+  border-color: #60a5fa;
+}
+
+.task-checkbox:checked {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.task-checkbox:checked::before {
+  transform: scale(1);
+}
+
+.dark .task-checkbox {
+  border-color: #3b82f6;
+  background: #0f172a;
+}
+
+.dark .task-checkbox:checked {
+  border-color: #60a5fa;
+  background: #1e3a8a;
+}
+
+.dark .task-checkbox::before {
+  background: #bfdbfe;
+}
+
 #task-list .task-item {
   transition:
     transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.24s ease,
-    box-shadow 0.2s ease,
-    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    margin 0.3s ease,
-    padding 0.3s ease;
-  overflow: hidden;
-  max-height: 500px;
+    box-shadow 0.2s ease;
   opacity: 1;
   transform: translateY(0) scale(1);
 }
@@ -36,11 +123,6 @@
 #task-list .task-item.task-removing {
   opacity: 0;
   transform: translateY(14px) scale(0.96);
-  max-height: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-top: 0;
-  padding-bottom: 0;
   pointer-events: none;
 }
 
@@ -57,6 +139,27 @@
 .task-action-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+button:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+button.is-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.btn-spinner {
+  width: 0.88rem;
+  height: 0.88rem;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spinnerRotate 0.65s linear infinite;
 }
 
 .task-action-btn-primary {
@@ -85,7 +188,10 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: #4b5563;
-  transition: all 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
   width: 100%;
 }
 
@@ -125,6 +231,26 @@
 
 .dark .task-action-btn-danger:hover {
   background: #991b1b;
+}
+
+#confirm-delete-accept.is-danger {
+  background: #dc2626;
+}
+
+#confirm-delete-accept.is-danger:hover {
+  background: #b91c1c;
+}
+
+#confirm-delete-accept.is-primary {
+  background: #2563eb;
+}
+
+#confirm-delete-accept.is-primary:hover {
+  background: #1d4ed8;
+}
+
+.dark #confirm-delete-accept.is-primary {
+  background: #3b82f6;
 }
 
 .dark .toolbar-filter-btn {
@@ -337,5 +463,21 @@ dialog::backdrop {
   to {
     opacity: 0;
     transform: translateY(-6px);
+  }
+}
+
+@keyframes spinnerRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }
