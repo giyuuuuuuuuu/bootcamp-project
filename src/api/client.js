@@ -1,6 +1,6 @@
 const LOCAL_API_ORIGIN = "http://localhost:3000";
 const PRODUCTION_API_BASE_PATH = "/api/v1/tasks";
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 15000;
 
 function getBaseUrl() {
   const hostname = window.location.hostname;

@@ -652,7 +652,7 @@ function handleNetworkError(error) {
   const statusLabel = status ? `HTTP ${status}` : "Sin respuesta";
   const message = error.message || "Error de conexión";
   setNetworkState("error", `${statusLabel}: ${message}`);
-  showToast("Error de red. Revisa el estado del backend.", "error");
+  showToast(`${statusLabel}: ${message}`, "error");
 }
 
 function applyTheme(theme) {

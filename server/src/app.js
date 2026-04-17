@@ -12,6 +12,8 @@ const allowedOrigins = [
   "http://localhost:5500",
   "http://127.0.0.1:5500",
 ].filter(Boolean);
+const LOCAL_ORIGIN_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+const VERCEL_ORIGIN_PATTERN = /^https:\/\/([a-z0-9-]+\.)*vercel\.app$/i;
 
 app.use(
   cors({
@@ -27,6 +29,18 @@ app.use(
       }
 
       if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      if (LOCAL_ORIGIN_PATTERN.test(origin)) {
+        callback(null, true);
+        return;
+      }
+      if (VERCEL_ORIGIN_PATTERN.test(origin)) {
+        callback(null, true);
+        return;
+      }
+      if (isProduction && origin.startsWith("https://")) {
         callback(null, true);
         return;
       }
