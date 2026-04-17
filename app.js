@@ -32,6 +32,7 @@ const toastContainer = document.getElementById("toast-container");
 const DEFAULT_CATEGORY = "personal";
 const TASK_INPUT_DEFAULT_BORDER = "#ddd";
 const TASK_INPUT_ERROR_BORDER = "#ef4444";
+const THEME_STORAGE_KEY = "taskflow-theme";
 
 const CATEGORY_LABELS = {
   personal: "Personal",
@@ -55,7 +56,7 @@ networkStatus.className =
   "hidden mb-4 rounded-lg border px-4 py-3 text-sm font-medium";
 taskList.parentElement.prepend(networkStatus);
 
-applyTheme("light");
+initializeTheme();
 renderTasks();
 registerKeyboardShortcuts();
 loadTasks();
@@ -413,6 +414,33 @@ function applyTheme(theme) {
   const isDark = theme === "dark";
   document.documentElement.classList.toggle("dark", isDark);
   themeIcon.textContent = isDark ? "☀️" : "🌙";
+
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
+  } catch (_error) {
+    // Ignore storage failures (private mode, blocked storage, etc.).
+  }
+}
+
+function initializeTheme() {
+  const storedTheme = getStoredTheme();
+
+  if (storedTheme) {
+    applyTheme(storedTheme);
+    return;
+  }
+
+  const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+  applyTheme(prefersDark ? "dark" : "light");
+}
+
+function getStoredTheme() {
+  try {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    return storedTheme === "dark" || storedTheme === "light" ? storedTheme : null;
+  } catch (_error) {
+    return null;
+  }
 }
 
 function updateStats() {

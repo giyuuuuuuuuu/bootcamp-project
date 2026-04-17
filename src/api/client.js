@@ -19,17 +19,29 @@ const BASE_URL = getBaseUrl();
 
 async function request(url, options = {}) {
   const response = await fetch(url, options);
+  const responseText = response.status === 204 ? "" : await response.text();
+  const contentType = response.headers.get("content-type") || "";
+  const canBeJson =
+    contentType.includes("application/json") ||
+    responseText.trim().startsWith("{") ||
+    responseText.trim().startsWith("[");
+  let payload = null;
 
-  if (!response.ok) {
-    let payload = null;
-
+  if (responseText && canBeJson) {
     try {
-      payload = await response.json();
+      payload = JSON.parse(responseText);
     } catch (_error) {
       payload = null;
     }
+  }
 
-    const error = new Error(payload?.error || "Error de red");
+  if (!response.ok) {
+    const error = new Error(
+      payload?.error ||
+        (canBeJson
+          ? "Error de red"
+          : "La API devolvio HTML en lugar de JSON. Revisa rutas /api en Vercel."),
+    );
     error.status = response.status;
     throw error;
   }
@@ -38,7 +50,15 @@ async function request(url, options = {}) {
     return null;
   }
 
-  return response.json();
+  if (payload !== null) {
+    return payload;
+  }
+
+  const error = new Error(
+    "Respuesta inesperada del servidor: se esperaba JSON valido.",
+  );
+  error.status = response.status;
+  throw error;
 }
 
 export async function getTasks() {
