@@ -1,4 +1,21 @@
-const BASE_URL = "http://localhost:3000/api/v1/tasks";
+const LOCAL_API_ORIGIN = "http://localhost:3000";
+const PRODUCTION_API_BASE_PATH = "/api/v1/tasks";
+
+function getBaseUrl() {
+  const hostname = window.location.hostname;
+  const isLocalhost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "0.0.0.0";
+
+  if (isLocalhost) {
+    return `${LOCAL_API_ORIGIN}/api/v1/tasks`;
+  }
+
+  return PRODUCTION_API_BASE_PATH;
+}
+
+const BASE_URL = getBaseUrl();
 
 async function request(url, options = {}) {
   const response = await fetch(url, options);

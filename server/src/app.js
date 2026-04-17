@@ -17,6 +17,15 @@ app.use(
 );
 app.use(express.json());
 
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    service: "TaskFlow Backend API",
+    status: "ok",
+    docs: "/api/v1/tasks",
+    health: "/health",
+  });
+});
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
