@@ -52,12 +52,6 @@ let networkState = "idle";
 let networkMessage = "";
 let highlightedTaskId = null;
 
-const networkStatus = document.createElement("div");
-networkStatus.id = "network-status";
-networkStatus.className =
-  "hidden mb-4 rounded-lg border px-4 py-3 text-sm font-medium";
-taskList.parentElement.prepend(networkStatus);
-
 initializeTheme();
 renderTasks();
 registerKeyboardShortcuts();
@@ -321,7 +315,7 @@ function renderTasks() {
     return;
   }
 
-  sortedTasks.forEach((task, index) => {
+  sortedTasks.forEach((task) => {
     const clone = taskTemplate.cloneNode(true);
     const listItem = clone.querySelector("li");
     const textElement = listItem.querySelector(".task-text");
@@ -340,11 +334,6 @@ function renderTasks() {
 
     if (highlightedTaskId && highlightedTaskId === task.id) {
       listItem.classList.add("task-enter");
-    }
-
-    if (!highlightedTaskId) {
-      listItem.classList.add("task-stagger");
-      listItem.style.animationDelay = `${Math.min(index * 35, 240)}ms`;
     }
 
     if (task.completed) {
@@ -434,35 +423,17 @@ function sortTasks(list) {
 function setNetworkState(state, message = "") {
   networkState = state;
   networkMessage = message;
-  renderNetworkStateBanner();
-  renderTasks();
 }
 
 function clearNetworkMessage() {
   if (networkState !== "loading") {
-    setNetworkState("idle", "");
+    networkState = "idle";
+    networkMessage = "";
   }
 }
 
 function renderNetworkStateBanner() {
-  if (!networkMessage) {
-    networkStatus.className = "hidden";
-    networkStatus.textContent = "";
-    return;
-  }
-
-  const classesByState = {
-    loading:
-      "mb-4 rounded-lg border px-4 py-3 text-sm font-medium bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-200",
-    success:
-      "mb-4 rounded-lg border px-4 py-3 text-sm font-medium bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-700 dark:text-green-200",
-    error:
-      "mb-4 rounded-lg border px-4 py-3 text-sm font-medium bg-red-50 border-red-200 text-red-700 dark:bg-red-900/30 dark:border-red-700 dark:text-red-200",
-    idle: "hidden",
-  };
-
-  networkStatus.className = classesByState[networkState] || "hidden";
-  networkStatus.textContent = networkMessage;
+  // Banner de estado oculto por UX: usamos toasts para feedback al usuario.
 }
 
 function handleNetworkError(error) {
