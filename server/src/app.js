@@ -4,9 +4,11 @@ const taskRoutes = require("./routes/task.routes");
 
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
+const vercelUrl = process.env.VERCEL_URL;
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  vercelUrl ? `https://${vercelUrl}` : null,
   "http://localhost:5500",
   "http://127.0.0.1:5500",
 ].filter(Boolean);
@@ -14,6 +16,11 @@ const allowedOrigins = [
 app.use(
   cors({
     origin(origin, callback) {
+      if (allowedOrigins.length === 0) {
+        callback(null, true);
+        return;
+      }
+
       if (!origin) {
         callback(null, true);
         return;
