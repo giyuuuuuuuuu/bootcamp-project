@@ -14,6 +14,7 @@ const taskList = document.getElementById("task-list");
 const taskTemplate = document.getElementById("task-template").content;
 const filterButtons = document.querySelectorAll(".filter-btn");
 const searchInput = document.getElementById("search-input");
+const clearSearchBtn = document.getElementById("clear-search-btn");
 const categoryFilter = document.getElementById("category-filter");
 const sortSelect = document.getElementById("sort-select");
 const editModal = document.getElementById("edit-modal");
@@ -49,6 +50,7 @@ let currentCategoryFilter = "all";
 let currentSort = "recent";
 let networkState = "idle";
 let networkMessage = "";
+let highlightedTaskId = null;
 
 const networkStatus = document.createElement("div");
 networkStatus.id = "network-status";
@@ -85,7 +87,8 @@ taskForm.addEventListener("submit", async (event) => {
   setNetworkState("loading", "Creando tarea...");
 
   try {
-    await createTask({ title, category });
+    const createdTask = await createTask({ title, category });
+    highlightedTaskId = createdTask?.id ? String(createdTask.id) : null;
     taskInput.value = "";
     categorySelect.value = DEFAULT_CATEGORY;
     await loadTasks("Tarea creada correctamente.");
@@ -113,6 +116,14 @@ taskInput.addEventListener("input", () => {
 searchInput.addEventListener("input", (event) => {
   searchQuery = event.target.value.toLowerCase();
   renderTasks();
+});
+
+clearSearchBtn.addEventListener("click", () => {
+  if (!searchInput.value) return;
+  searchInput.value = "";
+  searchQuery = "";
+  renderTasks();
+  showToast("Búsqueda limpiada.", "info");
 });
 
 categoryFilter.addEventListener("change", (event) => {
@@ -153,7 +164,7 @@ saveEditBtn.addEventListener("click", async () => {
 
   const newTitle = editInput.value.trim();
   if (newTitle === "") {
-    showToast("El título no puede estar vacío.");
+    showToast("El título no puede estar vacío.", "info");
     return;
   }
 
@@ -177,6 +188,9 @@ async function loadTasks(successMessage = "") {
     const remoteTasks = await getTasks();
     tasks = remoteTasks.map(normalizeTask);
     setNetworkState("success", successMessage || "Datos sincronizados con API.");
+    if (successMessage) {
+      showToast(successMessage, "success");
+    }
     renderTasks();
   } catch (error) {
     handleNetworkError(error);
@@ -194,11 +208,13 @@ async function deleteTaskById(taskId) {
   if (!shouldDelete) return;
 
   setNetworkState("loading", "Eliminando tarea...");
+  await animateTaskRemoval(taskId);
 
   try {
     await deleteTask(taskId);
     await loadTasks("Tarea eliminada.");
   } catch (error) {
+    renderTasks();
     handleNetworkError(error);
   }
 }
@@ -231,12 +247,23 @@ async function completeAllTasksFromApi() {
 }
 
 async function clearCompletedTasksFromApi() {
+  const completedTaskIds = tasks
+    .filter((task) => task.completed)
+    .map((task) => String(task.id));
+
+  if (completedTaskIds.length === 0) {
+    showToast("No hay tareas completadas para borrar.", "info");
+    return;
+  }
+
   setNetworkState("loading", "Eliminando tareas completadas...");
+  await animateTasksRemoval(completedTaskIds);
 
   try {
     await clearCompletedTasks();
     await loadTasks("Se eliminaron las tareas completadas.");
   } catch (error) {
+    renderTasks();
     handleNetworkError(error);
   }
 }
@@ -285,12 +312,6 @@ function matchesCurrentFilters(task) {
 function renderTasks() {
   taskList.innerHTML = "";
 
-  if (networkState === "loading") {
-    renderLoadingState();
-    updateStats();
-    return;
-  }
-
   const filteredTasks = tasks.filter(matchesCurrentFilters);
   const sortedTasks = sortTasks(filteredTasks);
 
@@ -300,7 +321,7 @@ function renderTasks() {
     return;
   }
 
-  sortedTasks.forEach((task) => {
+  sortedTasks.forEach((task, index) => {
     const clone = taskTemplate.cloneNode(true);
     const listItem = clone.querySelector("li");
     const textElement = listItem.querySelector(".task-text");
@@ -317,6 +338,15 @@ function renderTasks() {
     listItem.querySelector(".edit-btn").dataset.id = task.id;
     checkbox.dataset.id = task.id;
 
+    if (highlightedTaskId && highlightedTaskId === task.id) {
+      listItem.classList.add("task-enter");
+    }
+
+    if (!highlightedTaskId) {
+      listItem.classList.add("task-stagger");
+      listItem.style.animationDelay = `${Math.min(index * 35, 240)}ms`;
+    }
+
     if (task.completed) {
       textElement.classList.add("line-through", "opacity-50");
       checkbox.checked = true;
@@ -326,17 +356,50 @@ function renderTasks() {
   });
 
   updateStats();
+  highlightedTaskId = null;
 }
 
-function renderLoadingState() {
-  const loadingItem = document.createElement("li");
-  loadingItem.className =
-    "bg-white dark:bg-gray-800 p-6 rounded-xl border border-dashed border-blue-300 dark:border-blue-700 text-center text-blue-600 dark:text-blue-300";
-  loadingItem.innerHTML = `
-    <p class="font-semibold">Cargando desde el servidor...</p>
-    <p class="text-sm mt-1">Esperando respuesta de Node.js</p>
-  `;
-  taskList.appendChild(loadingItem);
+function animateTaskRemoval(taskId) {
+  return animateTasksRemoval([String(taskId)]);
+}
+
+function animateTasksRemoval(taskIds) {
+  const idsToRemove = new Set(taskIds.map((id) => String(id)));
+  const itemsToAnimate = [...taskList.querySelectorAll("li[data-id]")].filter((item) =>
+    idsToRemove.has(item.dataset.id),
+  );
+
+  if (itemsToAnimate.length === 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    let finishedAnimations = 0;
+
+    const markAnimationDone = () => {
+      finishedAnimations += 1;
+      if (finishedAnimations >= itemsToAnimate.length) {
+        resolve();
+      }
+    };
+
+    itemsToAnimate.forEach((item, index) => {
+      const delayMs = index * 45;
+
+      setTimeout(() => {
+        let resolved = false;
+        const finish = () => {
+          if (resolved) return;
+          resolved = true;
+          markAnimationDone();
+        };
+
+        item.classList.add("task-removing");
+        item.addEventListener("transitionend", finish, { once: true });
+        setTimeout(finish, 420);
+      }, delayMs);
+    });
+  });
 }
 
 function renderEmptyState() {
@@ -407,7 +470,7 @@ function handleNetworkError(error) {
   const statusLabel = status ? `HTTP ${status}` : "Sin respuesta";
   const message = error.message || "Error de conexión";
   setNetworkState("error", `${statusLabel}: ${message}`);
-  showToast("Error de red. Revisa el estado del backend.");
+  showToast("Error de red. Revisa el estado del backend.", "error");
 }
 
 function applyTheme(theme) {
@@ -453,15 +516,19 @@ function updateStats() {
   pendingTasksElement.textContent = pending;
 }
 
-function showToast(message) {
+function showToast(message, type = "info") {
+  const validType = ["success", "error", "info"].includes(type) ? type : "info";
   const toast = document.createElement("div");
-  toast.className = "toast";
+  toast.className = `toast toast-${validType}`;
   toast.textContent = message;
   toastContainer.appendChild(toast);
 
   setTimeout(() => {
-    toast.remove();
-  }, 2200);
+    toast.classList.add("toast-leaving");
+    setTimeout(() => {
+      toast.remove();
+    }, 220);
+  }, 2000);
 }
 
 function registerKeyboardShortcuts() {
