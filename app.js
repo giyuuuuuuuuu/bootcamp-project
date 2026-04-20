@@ -66,6 +66,11 @@ let renderFrameId = null;
 const inFlightTaskIds = new Set();
 let confirmModalOpen = false;
 
+/** Cierre del desplegable personalizado activo (si existe). */
+let activeCustomSelectClose = null;
+let activeCustomSelectWrap = null;
+
+initCustomSelects();
 initializeTheme();
 renderTasks();
 registerKeyboardShortcuts();
@@ -730,6 +735,12 @@ function registerKeyboardShortcuts() {
     const isTypingContext =
       targetTag === "INPUT" || targetTag === "TEXTAREA" || targetTag === "SELECT";
 
+    if (event.key === "Escape" && activeCustomSelectClose) {
+      activeCustomSelectClose();
+      event.preventDefault();
+      return;
+    }
+
     if (event.key === "Escape" && editModal.open) {
       closeEditModal();
       return;
@@ -746,4 +757,132 @@ function registerKeyboardShortcuts() {
       taskInput.focus();
     }
   });
+}
+
+function initCustomSelects() {
+  if (!document.documentElement.dataset.customSelectDocBound) {
+    document.documentElement.dataset.customSelectDocBound = "1";
+    document.addEventListener("click", (event) => {
+      if (!activeCustomSelectWrap || activeCustomSelectWrap.contains(event.target)) return;
+      activeCustomSelectClose?.();
+    });
+  }
+
+  document.querySelectorAll("select.task-select").forEach(enhanceTaskSelect);
+}
+
+function enhanceTaskSelect(selectEl) {
+  if (selectEl.dataset.enhanced === "1") return;
+  selectEl.dataset.enhanced = "1";
+
+  const isBorder2 = selectEl.classList.contains("border-2");
+  const wrap = document.createElement("div");
+  wrap.className = `custom-select${isBorder2 ? " custom-select--border-2" : " custom-select--border-1"}`;
+  if (selectEl.classList.contains("w-full")) {
+    wrap.classList.add("w-full");
+  }
+
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = selectEl.className.replace(/\btask-select\b/g, "custom-select-trigger").trim();
+  if (!/\bcustom-select-trigger\b/.test(trigger.className)) {
+    trigger.className = `custom-select-trigger ${trigger.className}`.trim();
+  }
+
+  const panel = document.createElement("div");
+  panel.className = "custom-select-panel";
+  panel.hidden = true;
+  panel.setAttribute("role", "listbox");
+
+  const baseId = selectEl.id || `select-${Math.random().toString(36).slice(2, 9)}`;
+  selectEl.id = baseId;
+  trigger.id = `${baseId}-trigger`;
+  panel.id = `${baseId}-list`;
+  trigger.setAttribute("aria-haspopup", "listbox");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.setAttribute("aria-controls", panel.id);
+
+  const label = document.querySelector(`label[for="${baseId}"]`);
+  if (label) {
+    label.setAttribute("for", trigger.id);
+  }
+
+  const valueSpan = document.createElement("span");
+  valueSpan.className = "custom-select-value";
+  trigger.appendChild(valueSpan);
+
+  for (let i = 0; i < selectEl.options.length; i += 1) {
+    const opt = selectEl.options[i];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "custom-select-option";
+    btn.dataset.value = opt.value;
+    btn.textContent = opt.textContent;
+    btn.setAttribute("role", "option");
+    btn.setAttribute("aria-selected", "false");
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (selectEl.value !== btn.dataset.value) {
+        selectEl.value = btn.dataset.value;
+        selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      syncFromSelect();
+      close();
+    });
+    panel.appendChild(btn);
+  }
+
+  selectEl.className = "select-native-hidden";
+  selectEl.setAttribute("tabindex", "-1");
+  selectEl.setAttribute("aria-hidden", "true");
+
+  const parent = selectEl.parentNode;
+  parent.insertBefore(wrap, selectEl);
+  wrap.appendChild(trigger);
+  wrap.appendChild(panel);
+  wrap.appendChild(selectEl);
+
+  function syncFromSelect() {
+    const opt = selectEl.options[selectEl.selectedIndex];
+    valueSpan.textContent = opt ? opt.textContent : "";
+    panel.querySelectorAll(".custom-select-option").forEach((btn) => {
+      const selected = btn.dataset.value === selectEl.value;
+      btn.classList.toggle("is-selected", selected);
+      btn.setAttribute("aria-selected", selected ? "true" : "false");
+    });
+  }
+
+  function close() {
+    wrap.classList.remove("is-open");
+    panel.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+    if (activeCustomSelectWrap === wrap) {
+      activeCustomSelectWrap = null;
+      activeCustomSelectClose = null;
+    }
+  }
+
+  function open() {
+    if (activeCustomSelectClose && activeCustomSelectWrap !== wrap) {
+      activeCustomSelectClose();
+    }
+    activeCustomSelectWrap = wrap;
+    activeCustomSelectClose = close;
+    wrap.classList.add("is-open");
+    panel.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+  }
+
+  trigger.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (wrap.classList.contains("is-open")) {
+      close();
+    } else {
+      open();
+    }
+  });
+
+  selectEl.addEventListener("change", syncFromSelect);
+  syncFromSelect();
 }

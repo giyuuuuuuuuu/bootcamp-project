@@ -21,10 +21,38 @@
   transition: none !important;
 }
 
-.task-select {
+/* Select nativo oculto (sincronizado con .custom-select) */
+.select-native-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.custom-select {
+  position: relative;
+  display: block;
+}
+
+.custom-select-trigger {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: left;
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
   background-image:
     linear-gradient(45deg, transparent 50%, #6b7280 50%),
     linear-gradient(135deg, #6b7280 50%, transparent 50%);
@@ -34,16 +62,125 @@
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
   padding-right: 2.2rem !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    border-radius 0.15s ease;
 }
 
-.task-select option {
-  background-color: #1f2937;
-  color: #f9fafb;
+.custom-select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.task-select option:checked {
+.custom-select-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - 1px);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem 0;
+  margin: 0;
+  list-style: none;
+  background-color: #fff;
+  border-style: solid;
+  border-color: #e5e7eb;
+  border-width: 0 1px 1px;
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+  max-height: min(50vh, 16rem);
+  overflow-y: auto;
+}
+
+.custom-select--border-2 .custom-select-panel {
+  border-width: 0 2px 2px;
+  border-color: #e5e7eb;
+}
+
+.dark .custom-select-panel {
+  background-color: #111827;
+  border-color: #374151;
+}
+
+.dark .custom-select--border-2 .custom-select-panel {
+  border-color: #374151;
+}
+
+.custom-select-option {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.5rem 0.85rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0.35rem;
+}
+
+.custom-select-option:hover,
+.custom-select-option:focus-visible {
+  outline: none;
+  background-color: #eff6ff;
+}
+
+.dark .custom-select-option:hover,
+.dark .custom-select-option:focus-visible {
+  background-color: #1e3a8a;
+}
+
+.custom-select-option.is-selected {
   background-color: #2563eb;
   color: #ffffff;
+}
+
+.dark .custom-select-option.is-selected {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.custom-select.is-open .custom-select-trigger {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+  border-bottom-width: 0;
+  box-shadow: none;
+}
+
+.custom-select.is-open .custom-select-panel {
+  border-top-width: 1px;
+  border-top-color: #e5e7eb;
+}
+
+.custom-select.is-open.custom-select--border-2 .custom-select-panel {
+  border-top-width: 2px;
+  border-top-color: #e5e7eb;
+}
+
+.dark .custom-select.is-open .custom-select-trigger {
+  border-bottom-color: transparent;
+}
+
+.dark .custom-select.is-open .custom-select-panel {
+  border-top-color: #374151;
+}
+
+.dark .custom-select.is-open.custom-select--border-2 .custom-select-panel {
+  border-top-color: #374151;
+}
+
+.dark .custom-select-trigger {
+  background-image:
+    linear-gradient(45deg, transparent 50%, #9ca3af 50%),
+    linear-gradient(135deg, #9ca3af 50%, transparent 50%);
 }
 
 .task-textarea {
@@ -56,17 +193,6 @@
 
 .dark .task-textarea::placeholder {
   color: #64748b;
-}
-
-.dark .task-select {
-  background-image:
-    linear-gradient(45deg, transparent 50%, #9ca3af 50%),
-    linear-gradient(135deg, #9ca3af 50%, transparent 50%);
-}
-
-.dark .task-select option {
-  background-color: #111827;
-  color: #f3f4f6;
 }
 
 .task-checkbox {
@@ -311,6 +437,34 @@ button.is-loading {
 dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+}
+
+.app-dialog {
+  margin: auto;
+  max-width: min(96vw, 28rem);
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.app-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
+}
+
+.modal-panel {
+  border-radius: 1rem;
+  box-sizing: border-box;
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.45),
+    0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+.dark .modal-panel {
+  box-shadow:
+    0 0 0 1px rgba(51, 65, 85, 0.9),
+    0 25px 50px -12px rgba(0, 0, 0, 0.55);
 }
 
 .task-category-badge {
