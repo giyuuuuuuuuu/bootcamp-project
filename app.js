@@ -166,7 +166,8 @@ sortSelect.addEventListener("change", (event) => {
 
 themeToggleBtn.addEventListener("click", () => {
   const isDarkTheme = document.documentElement.classList.contains("dark");
-  applyTheme(isDarkTheme ? "light" : "dark");
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  applyTheme(isDarkTheme ? "light" : "dark", !reduceMotion);
 });
 
 taskList.addEventListener("click", async (event) => {
@@ -660,20 +661,88 @@ function handleNetworkError(error) {
   showToast(`${statusLabel}: ${message}`, "error");
 }
 
-function applyTheme(theme) {
+function applyTheme(theme, withFade = false) {
   const isDark = theme === "dark";
-  document.documentElement.classList.add("theme-switching");
-  document.documentElement.classList.toggle("dark", isDark);
-  themeIcon.textContent = isDark ? "☀️" : "🌙";
-  window.setTimeout(() => {
-    document.documentElement.classList.remove("theme-switching");
-  }, 140);
 
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
-  } catch (_error) {
-    // Ignore storage failures (private mode, blocked storage, etc.).
+  const persist = () => {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
+    } catch (_error) {
+      // Ignore storage failures (private mode, blocked storage, etc.).
+    }
+  };
+
+  const commitTheme = () => {
+    document.documentElement.classList.toggle("dark", isDark);
+    themeIcon.textContent = isDark ? "☀️" : "🌙";
+    persist();
+  };
+
+  if (!withFade) {
+    document.documentElement.classList.add("theme-switching");
+    commitTheme();
+    window.setTimeout(() => {
+      document.documentElement.classList.remove("theme-switching");
+    }, 140);
+    return;
   }
+
+  const html = document.documentElement;
+  if (html.classList.contains("theme-crossfade")) {
+    return;
+  }
+
+  const finishCleanup = () => {
+    html.classList.remove("theme-crossfade", "theme-fade-step-in");
+    document.body.style.willChange = "";
+  };
+
+  let fadeOutDone = false;
+  let fadeInListenerAttached = false;
+
+  const onFadeInEnd = (event) => {
+    if (event.propertyName !== "opacity") return;
+    document.body.removeEventListener("transitionend", onFadeInEnd);
+    finishCleanup();
+  };
+
+  const afterFadeOut = () => {
+    if (fadeOutDone) return;
+    fadeOutDone = true;
+    window.clearTimeout(fadeOutFallbackId);
+    document.body.removeEventListener("transitionend", onFadeOutEnd);
+
+    html.classList.remove("theme-fade-step-out");
+    html.classList.add("theme-fade-hold", "theme-switching");
+    commitTheme();
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        html.classList.remove("theme-switching", "theme-fade-hold");
+        html.classList.add("theme-fade-step-in");
+        if (!fadeInListenerAttached) {
+          fadeInListenerAttached = true;
+          document.body.addEventListener("transitionend", onFadeInEnd);
+        }
+        window.setTimeout(() => {
+          if (html.classList.contains("theme-fade-step-in")) {
+            document.body.removeEventListener("transitionend", onFadeInEnd);
+            finishCleanup();
+          }
+        }, 420);
+      });
+    });
+  };
+
+  function onFadeOutEnd(event) {
+    if (event.propertyName !== "opacity") return;
+    afterFadeOut();
+  }
+
+  document.body.style.willChange = "opacity";
+  html.classList.add("theme-crossfade", "theme-fade-step-out");
+  document.body.addEventListener("transitionend", onFadeOutEnd);
+
+  const fadeOutFallbackId = window.setTimeout(afterFadeOut, 340);
 }
 
 function initializeTheme() {
